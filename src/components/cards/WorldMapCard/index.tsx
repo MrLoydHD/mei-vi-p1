@@ -9,8 +9,8 @@ export default function WorldMapCard() {
   const [isInfoOpen, setIsInfoOpen] = useState(false)
 
   return (
-    <Card className="md:row-span-2 border-primary">
-      <CardContent className="p-4 md:p-6 h-full">
+    <Card className="border-primary">
+      <CardContent className="p-4 md:p-6">
         <div className="flex justify-between items-center mb-2 md:mb-4">
           <h2 className="text-xl md:text-2xl font-bold">World Happiness Map</h2>
           <Popover open={isInfoOpen} onOpenChange={setIsInfoOpen}>
@@ -44,7 +44,7 @@ export default function WorldMapCard() {
             </PopoverContent>
           </Popover>
         </div>
-        <div className="h-[calc(100%-2rem)]">
+        <div className="h-[500px]">
           <InteractiveGlobe />
         </div>
       </CardContent>
