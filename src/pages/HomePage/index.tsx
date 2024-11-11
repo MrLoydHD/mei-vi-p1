@@ -11,6 +11,8 @@ import TrendChart from '@/components/d3/TrendChart'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import CountryComparisonHeatmapCard from '@/components/cards/CountryComparisonHeatmapCard'
+
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState("tab1")
@@ -112,13 +114,7 @@ export default function HomePage() {
               <CountriesComparasionCard />
             </div>
             <div className="lg:col-span-1">
-              <Card className="border-primary h-full">
-                <CardContent className="p-4 md:p-6">
-                  <h2 className="text-xl md:text-2xl font-bold mb-4">Comparison Details</h2>
-                  {/* Add content for the first small card here */}
-                  <p>This card will show detailed comparisons between countries.</p>
-                </CardContent>
-              </Card>
+              <CountryComparisonHeatmapCard />
             </div>
             <div className="lg:col-span-1">
               <Card className="border-primary h-full">
