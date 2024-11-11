@@ -1,27 +1,31 @@
+"use client"
+
 import React, { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { feature } from 'topojson-client'
 import { useData } from '@/contexts/data'
 import { LastYearData, HappinessData } from '@/lib/types'
-import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Info } from "lucide-react"
+import { Button } from '@/components/ui/button'
 
 // Country name mapping
 const countryNameMapping: { [key: string]: string } = {
-    "United States of America": "United States",
-    "Bosnia and Herz.": "Bosnia and Herzegovina",
-    "Turkey": "Turkiye",
-    "Congo": "Congo (Brazzaville)",
-    "Dem. Rep. Congo": "Congo (Kinshasa)",
-    "Czech Republic": "Czechia",
-    "Côte d'Ivoire": "Ivory Coast",
-    "eSwatini": "Eswatini",
-    "Taiwan" : "Taiwan Province of China",
-    "Dominican Rep.": "Dominican Republic",
-    "S. Sudan": "South Sudan",
-    "Central African Rep.": "Central African Republic",
-  }
+  "United States of America": "United States",
+  "Bosnia and Herz.": "Bosnia and Herzegovina",
+  "Turkey": "Turkiye",
+  "Congo": "Congo (Brazzaville)",
+  "Dem. Rep. Congo": "Congo (Kinshasa)",
+  "Czech Republic": "Czechia",
+  "Côte d'Ivoire": "Ivory Coast",
+  "eSwatini": "Eswatini",
+  "Taiwan" : "Taiwan Province of China",
+  "Dominican Rep.": "Dominican Republic",
+  "S. Sudan": "South Sudan",
+  "Central African Rep.": "Central African Republic",
+}
 
 const legacyCountries = [
   "Belarus", "Angola", "Sudan", "South Sudan", "Somalia", "Central African Republic",
@@ -29,15 +33,19 @@ const legacyCountries = [
   "Suriname", "Guyana", "Haiti", "Cuba", "Belize"
 ]
 
-export default function InteractiveGlobe() {
+interface InteractiveGlobeProps {
+  onCountrySelect: (country: string) => void
+  selectedCountry: string
+}
+
+export default function InteractiveGlobe({ onCountrySelect, selectedCountry }: InteractiveGlobeProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
   const { lastYearData, timeSeriesData, isLoading } = useData()
-  const [scale, setScale] = useState(1)
   const [showLegacy, setShowLegacy] = useState(false)
-
+  const [selectedCountryState, setSelectedCountryState] = useState<d3.GeoPermissibleObjects | null>(null)
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -52,7 +60,7 @@ export default function InteractiveGlobe() {
     return () => window.removeEventListener('resize', updateDimensions)
   }, [])
 
-  const getLegacyData = (countryName: string) : HappinessData | undefined=> {
+  const getLegacyData = (countryName: string) : HappinessData | undefined => {
     const countryData = timeSeriesData.filter(d => d['Country name'] === countryName)
     if (countryData.length === 0) return undefined
     return countryData.reduce((prev, current) => (prev.year > current.year) ? prev : current)
@@ -68,6 +76,7 @@ export default function InteractiveGlobe() {
     }))
   }
 
+  let worldData: any;
 
   useEffect(() => {
     if (!svgRef.current || isLoading || lastYearData.length === 0 || dimensions.width === 0) return
@@ -79,7 +88,7 @@ export default function InteractiveGlobe() {
     svg.selectAll("*").remove()
 
     const projection = d3.geoOrthographic()
-      .scale((Math.min(width, height) / 2) * scale)
+      .scale((Math.min(width, height) / 2))
       .center([0, 0])
       .rotate([0, -30])
       .translate([width / 2, height / 2])
@@ -87,18 +96,24 @@ export default function InteractiveGlobe() {
     const initialScale = projection.scale()
     let path = d3.geoPath().projection(projection)
 
-    const globe = svg.append("circle")
+    const globeGroup = svg.append("g")
+      .attr("transform", `translate(${width/2},${height/2})`)
+
+    const globeBackground = globeGroup.append("circle")
       .attr("fill", "#EEE")
+      .attr("r", initialScale);
+
+    const globeBorder = globeGroup.append("circle")
+      .attr("fill", "none")
       .attr("stroke", "#000")
       .attr("stroke-width", "0.2")
-      .attr("cx", width / 2)
-      .attr("cy", height / 2)
-      .attr("r", initialScale)
+      .attr("r", initialScale);
+
 
     const tooltip = d3.select(tooltipRef.current)
 
     const colorScale = d3.scaleSequential(d3.interpolateRdYlGn)
-    .domain([
+      .domain([
         d3.min(displayData, (d: LastYearData | HappinessData) => d['Ladder score'] || d['Life Ladder'] || 0) ?? 0,
         d3.max(displayData, (d: LastYearData | HappinessData) => d['Ladder score'] || d['Life Ladder'] || 10) ?? 10
       ])
@@ -116,8 +131,10 @@ export default function InteractiveGlobe() {
     }
 
     d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
-      .then((worldData: any) => {
+      .then((data: any) => {
+        worldData = data;
         const countryShapes = feature(worldData, worldData.objects.countries).features
+
 
         svg.selectAll(".country")
           .data(countryShapes)
@@ -130,7 +147,8 @@ export default function InteractiveGlobe() {
           })
           .attr("stroke", "#000")
           .attr("stroke-width", 0.1)
-          .on("mouseover", function(event, d: any) {
+          .style("cursor", d => findCountryData(d.properties.name) ? "pointer" : "default")
+          .on("mousemove", function(event, d: any) {
             const countryDataItem = findCountryData(d.properties.name)
             let tooltipContent = `${d.properties.name}<br/>`
             if (countryDataItem) {
@@ -145,12 +163,58 @@ export default function InteractiveGlobe() {
             tooltip
               .style("opacity", 1)
               .html(tooltipContent)
-              .style("left", (event.pageX + 15) + "px")
-              .style("top", (event.pageY - 28) + "px")
+              .style("left", (event.pageX - 210) + "px")
+              .style("top", (event.pageY - 230) + "px")
           })
           .on("mouseout", function() {
             tooltip.style("opacity", 0)
           })
+          .on("click", function(event, d: any) {
+            const countryDataItem = findCountryData(d.properties.name)
+            if (countryDataItem) {
+              const countryName = countryNameMapping[d.properties.name] || d.properties.name
+              onCountrySelect(countryName)
+              rotateAndZoomToCountry(d)
+            }
+          })
+
+          if (selectedCountry) {
+            const country = countryShapes.find((d: any) => {
+              const countryDataItem = findCountryData(d.properties.name)
+              const countryName = countryNameMapping[d.properties.name] || d.properties.name
+              return countryDataItem && countryName === selectedCountry
+            })
+            if (country) {
+              rotateAndZoomToCountry(country)
+            }
+          }
+
+        function rotateAndZoomToCountry(country: d3.GeoPermissibleObjects) {
+          const centroid = d3.geoCentroid(country)
+          const r = d3.interpolate(projection.rotate(), [-centroid[0], -centroid[1]])
+          const zoomLevel = 2.5 // Increased zoom level
+
+          d3.transition()
+            .duration(1000)
+            .tween("rotate", () => (t: number) => {
+              projection.rotate(r(t))
+              path = d3.geoPath().projection(projection)
+              svg.selectAll(".country").attr("d", path as any)
+            })
+            .transition()
+            .duration(750)
+            .tween("zoom", () => (t: number) => {
+              const scale = d3.interpolate(projection.scale(), initialScale * zoomLevel)(t)
+              projection.scale(scale)
+              path = d3.geoPath().projection(projection)
+              svg.selectAll(".country").attr("d", path as any)
+              globeBackground.attr("r", scale)
+              globeBorder.attr("r", scale)
+                .attr("stroke-width", 0.2 / (scale / initialScale))
+            })
+
+          setSelectedCountryState(country)
+        }
 
         // Rotation logic
         let dragStarted = false
@@ -159,114 +223,132 @@ export default function InteractiveGlobe() {
 
         const drag = d3.drag<SVGSVGElement, unknown>()
           .on("start", (event) => {
-            dragStarted = true
-            rotateStart = [event.x, event.y]
+            dragStarted = true;
+            rotateStart = [event.x, event.y];
           })
           .on("drag", (event) => {
-            if (!dragStarted || !rotateStart) return
+            if (!dragStarted || !rotateStart) return;
 
-            const rotateScale = 0.5
-            const dx = (event.x - rotateStart[0]) * rotateScale
-            const dy = (event.y - rotateStart[1]) * rotateScale
+            const rotateScale = 0.5;
+            const dx = (event.x - rotateStart[0]) * rotateScale;
+            const dy = (event.y - rotateStart[1]) * rotateScale;
 
             rotate = [
               (rotate[0] + dx) % 360,
               Math.max(-90, Math.min(90, rotate[1] - dy)),
               rotate[2]
-            ]
+            ];
 
-            projection.rotate(rotate)
-            path = d3.geoPath().projection(projection)
-            svg.selectAll(".country").attr("d", path as any)
+            projection.rotate(rotate);
+            path = d3.geoPath().projection(projection);
+            svg.selectAll(".country").attr("d", path as any);
 
-            rotateStart = [event.x, event.y]
+            rotateStart = [event.x, event.y];
           })
           .on("end", () => {
-            dragStarted = false
-            rotateStart = null
-          })
+            dragStarted = false;
+            rotateStart = null;
+          });
 
-        svg.call(drag)
+        svg.call(drag);
+
+        // Zoom behavior
+        const zoom = d3.zoom<SVGSVGElement, unknown>()
+          .scaleExtent([0.8, 10])
+          .on('zoom', (event) => {
+            const { transform } = event;
+            projection.scale(initialScale * transform.k);
+            path = d3.geoPath().projection(projection);
+            svg.selectAll('.country').attr('d', path as any);
+            globeBackground.attr("r", initialScale * transform.k);
+            globeBorder.attr("r", initialScale * transform.k)
+              .attr("stroke-width", 0.2 / transform.k);
+          });
+
+        svg.call(zoom);
+
+        // Color legend
+        const legendWidth = 26
+        const legendHeight = 200
+        const legendSvg = svg.append("g")
+          .attr("transform", `translate(${width - 70}, ${height / 2 - legendHeight / 2})`)
+
+        legendSvg.append("rect")
+          .attr("width", legendWidth + 80)
+          .attr("height", legendHeight + 40)
+          .attr("x", -45)
+          .attr("y", -20)
+          .attr("fill", "white")
+          .attr("opacity", 0.8)
+
+        const legendScale = d3.scaleLinear()
+          .domain(colorScale.domain())
+          .range([legendHeight, 0])
+
+        const legendAxis = d3.axisRight(legendScale)
+          .ticks(5)
+          .tickFormat(d => d.toFixed(2))
+
+        legendSvg.append("g")
+          .call(legendAxis)
+          .attr("transform", `translate(${legendWidth}, 0)`)
+
+        const defs = svg.append("defs")
+        const linearGradient = defs.append("linearGradient")
+          .attr("id", "linear-gradient")
+          .attr("x1", "0%")
+          .attr("y1", "100%")
+          .attr("x2", "0%")
+          .attr("y2", "0%")
+
+        linearGradient.selectAll("stop")
+          .data(colorScale.ticks().map((t, i, n) => ({ offset: `${100*i/n.length}%`, color: colorScale(t) })))
+          .enter().append("stop")
+          .attr("offset", d => d.offset)
+          .attr("stop-color", d => d.color)
+
+        legendSvg.append("rect")
+          .attr("width", legendWidth)
+          .attr("height", legendHeight)
+          .style("fill", "url(#linear-gradient)")
+
+        legendSvg.append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("x", -legendHeight / 2)
+          .attr("y", -30)
+          .attr("z", 10)
+          .attr("text-anchor", "middle")
+          .style("font-size", "12px")
+          .text("Average Life Evaluation")
+
+        legendSvg.append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("x", -legendHeight / 2)
+          .attr("y", -18)
+          .attr("text-anchor", "middle")
+          .style("font-size", "10px")
+          .text("(3-year average)")
+
+        // Min and max labels
+        const [min, max] = colorScale.domain()
+        legendSvg.append("text")
+          .attr("x", 0)
+          .attr("y", 210)
+          .attr("text-anchor", "start")
+          .style("font-size", "10px")
+          .style("font-weight", "bold")
+          .text(min.toFixed(2))
+
+        legendSvg.append("text")
+          .attr("x", legendWidth)
+          .attr("y", -5)
+          .attr("text-anchor", "end")
+          .style("font-weight", "bold")
+          .style("font-size", "10px")
+          .text(max.toFixed(2))
       })
 
-    // Color legend
-    const legendWidth = 20
-    const legendHeight = 200
-    const legendSvg = svg.append("g")
-      .attr("transform", `translate(${width - 50}, ${height / 2 - legendHeight / 2})`)
-
-    const legendScale = d3.scaleLinear()
-      .domain(colorScale.domain())
-      .range([legendHeight, 0])
-
-    const legendAxis = d3.axisRight(legendScale)
-      .ticks(5)
-      .tickFormat(d => d.toFixed(2))
-
-    legendSvg.append("g")
-      .call(legendAxis)
-      .attr("transform", `translate(${legendWidth}, 0)`)
-
-
-    const defs = svg.append("defs")
-    const linearGradient = defs.append("linearGradient")
-      .attr("id", "linear-gradient")
-      .attr("x1", "0%")
-      .attr("y1", "100%")
-      .attr("x2", "0%")
-      .attr("y2", "0%")
-      
-
-    linearGradient.selectAll("stop")
-      .data(colorScale.ticks().map((t, i, n) => ({ offset: `${100*i/n.length}%`, color: colorScale(t) })))
-      .enter().append("stop")
-      .attr("offset", d => d.offset)
-      .attr("stop-color", d => d.color)
-
-    legendSvg.append("rect")
-      .attr("width", legendWidth)
-      .attr("height", legendHeight)
-      .style("fill", "url(#linear-gradient)")
-
-    legendSvg.append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("x", -legendHeight / 2)
-      .attr("y", -30)
-      .attr("z", 10)
-      .attr("text-anchor", "middle")
-      .style("font-size", "12px")
-      .text("Average Life Evaluation")
-
-
-    legendSvg.append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("x", -legendHeight / 2)
-      .attr("y", -18)
-      .attr("text-anchor", "middle")
-      .style("font-size", "10px")
-      .text("(3-year average)")
-
-
-    // Min and max labels
-    const [min, max] = colorScale.domain()
-    legendSvg.append("text")
-      .attr("x", 0)
-      .attr("y", 210)
-      .attr("text-anchor", "start")
-      .style("font-size", "10px")
-      .style("font-weight", "bold")
-      .text(min.toFixed(2))
-
-    legendSvg.append("text")
-      .attr("x", legendWidth)
-      .attr("y", -5)
-      .attr("text-anchor", "end")
-      .style("font-weight", "bold")
-
-      .style("font-size", "10px")
-      .text(max.toFixed(2))
-
-    }, [lastYearData, timeSeriesData, isLoading, dimensions, scale, showLegacy])
+    }, [lastYearData, timeSeriesData, isLoading, dimensions, showLegacy, onCountrySelect, selectedCountry])
 
   if (isLoading) {
     return <div>Loading...</div>
@@ -274,28 +356,36 @@ export default function InteractiveGlobe() {
 
   return (
     <div className="flex flex-col w-full h-full">
-      <div ref={containerRef} className="flex-grow">
+      <div ref={containerRef} className="h-[400px]">
         <svg ref={svgRef} width="100%" height="100%" />
         <div ref={tooltipRef} className="absolute pointer-events-none bg-white p-2 rounded shadow-md opacity-0 transition-opacity" />
       </div>
       <div className="p-4 bg-background">
-        <Slider
-          defaultValue={[1]}
-          max={2}
-          min={0.5}
-          step={0.1}
-          onValueChange={([value]) => setScale(value)}
-        />
-        <div className="text-center mt-2 text-sm text-muted-foreground">
-          Zoom: {scale.toFixed(1)}x
-        </div>
         <div className="flex justify-center items-center space-x-2 mt-4">
-            <Switch
-                id="legacy-mode"
-                checked={showLegacy}
-                onCheckedChange={setShowLegacy}
-            />
-            <Label htmlFor="legacy-mode">Legacy Mode</Label>
+          <Switch
+            id="legacy-mode"
+            checked={showLegacy}
+            onCheckedChange={setShowLegacy}
+          />
+          <Label htmlFor="legacy-mode">Legacy Mode</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button className="h-8 w-8 p-0 rounded-xl">
+                <Info className="h-12 w-12 text-white" strokeWidth={3} />
+                <span className="sr-only">Legacy mode info</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+              <div className="space-y-2">
+                <h4 className="font-medium leading-none">Legacy Mode</h4>
+                <p className="text-sm text-muted-foreground">
+                  Legacy mode displays data for countries that don't have current year data, 
+                  using their most recent available data point. This helps provide a more 
+                  complete global picture, especially for countries with limited recent data.
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
     </div>

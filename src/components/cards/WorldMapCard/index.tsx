@@ -5,20 +5,24 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Info } from "lucide-react"
 import InteractiveGlobe from '@/components/d3/InteractiveGlobe'
 
-export default function WorldMapCard() {
+interface WorldMapCardProps {
+  onCountrySelect: (country: string) => void
+  selectedCountry?: string
+}
+
+export default function WorldMapCard({ onCountrySelect, selectedCountry }: WorldMapCardProps) {
   const [isInfoOpen, setIsInfoOpen] = useState(false)
 
+  console.log('selectedCountry1:', selectedCountry)
+
   return (
-    <Card className="border-primary">
-      <CardContent className="p-4 md:p-6">
+    <Card className="border-primary h-full flex flex-col">
+      <CardContent className="p-4 md:p-6 flex-grow flex flex-col">
         <div className="flex justify-between items-center mb-2 md:mb-4">
           <h2 className="text-xl md:text-2xl font-bold">World Happiness Map</h2>
           <Popover open={isInfoOpen} onOpenChange={setIsInfoOpen}>
             <PopoverTrigger asChild>
-              <Button size="icon" className="h-8 w-8 rounded-xl">
-                <Info className="h-4 w-4" />
-                <span className="sr-only">Info</span>
-              </Button>
+              <Button variant="outline">What does this mean?</Button>
             </PopoverTrigger>
             <PopoverContent className="w-80">
               <div className="space-y-2">
@@ -44,8 +48,8 @@ export default function WorldMapCard() {
             </PopoverContent>
           </Popover>
         </div>
-        <div className="h-[500px]">
-          <InteractiveGlobe />
+        <div className="flex-grow translate-y-4">
+          <InteractiveGlobe onCountrySelect={onCountrySelect} selectedCountry={selectedCountry} />
         </div>
       </CardContent>
     </Card>

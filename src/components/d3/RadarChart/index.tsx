@@ -68,20 +68,27 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
       .domain(features)
       .range([0, 2 * Math.PI])
 
-    // Draw circular grid
+    // Draw circular grid with animation
     const circles = [0.2, 0.4, 0.6, 0.8, 1]
-    circles.forEach(r => {
+    circles.forEach((r, i) => {
       g.append("path")
         .attr("d", d3.lineRadial<number>()
           .angle((_, i) => i * Math.PI / 3)
-          .radius(radialScale(r))
+          .radius(0)
           .curve(d3.curveLinearClosed)([0, 1, 2, 3, 4, 5]))
         .attr("stroke", "gray")
         .attr("fill", "none")
         .attr("opacity", 0.3)
+        .transition()
+        .delay(i * 200)
+        .duration(1000)
+        .attr("d", d3.lineRadial<number>()
+          .angle((_, i) => i * Math.PI / 3)
+          .radius(radialScale(r))
+          .curve(d3.curveLinearClosed)([0, 1, 2, 3, 4, 5]))
 
-      features.forEach((feature, i) => {
-        const angle = (i * Math.PI / 3) - Math.PI / 2
+      features.forEach((feature, j) => {
+        const angle = (j * Math.PI / 3) - Math.PI / 2
         const labelX = (radialScale(r) + 10) * Math.cos(angle)
         const labelY = (radialScale(r) + 10) * Math.sin(angle)
         const scaleValue = scales[feature].invert(r)
@@ -94,10 +101,15 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
           .attr("font-size", "12px")
           .attr("fill", "gray")
           .text(scaleValue.toFixed(2))
+          .attr("opacity", 0)
+          .transition()
+          .delay(i * 200 + 1000)
+          .duration(500)
+          .attr("opacity", 1)
       })
     })
 
-    // Draw axis lines and labels
+    // Draw axis lines and labels with animation
     features.forEach((feature, i) => {
       const angle = (i * Math.PI / 3) - Math.PI / 2
       const lineCoords = angleToCoordinate(angle, 1)
@@ -105,10 +117,15 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
       g.append("line")
         .attr("x1", 0)
         .attr("y1", 0)
-        .attr("x2", lineCoords.x)
-        .attr("y2", lineCoords.y)
+        .attr("x2", 0)
+        .attr("y2", 0)
         .attr("stroke", "gray")
         .attr("opacity", 0.3)
+        .transition()
+        .delay(1000)
+        .duration(1000)
+        .attr("x2", lineCoords.x)
+        .attr("y2", lineCoords.y)
 
       const labelRadius = radius * 1.2
       const labelX = labelRadius * Math.cos(angle)
@@ -122,10 +139,15 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
         .text(feature.replace("Explained by: ", ""))
         .attr("font-size", "15px")
         .attr("fill", "#333")
+        .attr("opacity", 0)
         .call(wrap, 100)
+        .transition()
+        .delay(2000)
+        .duration(1000)
+        .attr("opacity", 1)
     })
 
-    // Draw data points and shape
+    // Draw data points and shape with animation
     const coordinates = features.map((feature, i) => {
       const angle = (i * Math.PI / 3) - Math.PI / 2
       const value = parseValue(countryData[feature as keyof typeof countryData])
@@ -134,50 +156,66 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
     })
 
     // Draw shape
+    const line = d3.lineRadial<{x: number, y: number}>()
+      .angle((_, i) => i * Math.PI / 3)
+      .radius(d => Math.sqrt(d.x * d.x + d.y * d.y))
+      .curve(d3.curveLinearClosed)
+
     g.append("path")
       .datum(coordinates)
-      .attr("d", d3.line<{x: number, y: number}>().x(d => d.x).y(d => d.y).curve(d3.curveLinearClosed))
+      .attr("d", line([{x: 0, y: 0}]))
       .attr("stroke", "hsl(var(--primary))")
       .attr("fill", "hsl(var(--primary))")
       .attr("fill-opacity", 0.3)
       .attr("stroke-width", 2)
+      .transition()
+      .delay(3000)
+      .duration(1000)
+      .attrTween("d", function() {
+        const interpolator = d3.interpolate([{x: 0, y: 0}], coordinates)
+        return function(t) {
+          return line(interpolator(t))
+        }
+      })
 
-    // Add data points and labels
+    // Add data points and labels with animation
     coordinates.forEach((coord, index) => {
       const feature = features[index]
       const value = parseValue(countryData[feature as keyof typeof countryData])
       
       g.append("circle")
-        .attr("cx", coord.x)
-        .attr("cy", coord.y)
+        .attr("cx", 0)
+        .attr("cy", 0)
         .attr("r", 4)
         .attr("fill", "hsl(var(--primary))")
+        .transition()
+        .delay(3000 + index * 100)
+        .duration(500)
+        .attr("cx", coord.x)
+        .attr("cy", coord.y)
 
       const labelRadius = radius * 1.1
       const angle = (index * Math.PI / 3) - Math.PI / 2
       const labelX = labelRadius * Math.cos(angle)
       const labelY = labelRadius * Math.sin(angle)
 
-      //se for log gdp per capita, social support e perceptions of corruption, coloca o label em cima
-        if (feature === "Explained by: Log GDP per capita" || feature === "Explained by: Social support" || feature === "Explained by: Perceptions of corruption") {
-            g.append("text")
-            .attr("x", labelX)
-            .attr("y", labelY - 5)
-            .attr("text-anchor", "middle")
-            .attr("dominant-baseline", "middle")
-            .attr("font-size", "14px")
-            .attr("fill", "#333")
-            .text(value.toFixed(3))
-        } else {
-            g.append("text")
-            .attr("x", labelX)
-            .attr("y", labelY + 10)
-            .attr("text-anchor", "middle")
-            .attr("dominant-baseline", "middle")
-            .attr("font-size", "14px")
-            .attr("fill", "#333")
-            .text(value.toFixed(3))
-        }
+      const labelYOffset = feature === "Explained by: Log GDP per capita" || 
+                           feature === "Explained by: Social support" || 
+                           feature === "Explained by: Perceptions of corruption" ? -5 : 10
+
+      g.append("text")
+        .attr("x", labelX)
+        .attr("y", labelY + labelYOffset)
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "middle")
+        .attr("font-size", "14px")
+        .attr("fill", "#333")
+        .text(value.toFixed(3))
+        .attr("opacity", 0)
+        .transition()
+        .delay(3500 + index * 100)
+        .duration(500)
+        .attr("opacity", 1)
     })
 
     function angleToCoordinate(angle: number, value: number): { x: number; y: number } {
@@ -229,7 +267,7 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
           </PopoverTrigger>
           <PopoverContent className="w-80">
             <h3 className="font-semibold mb-2">Understanding the Happiness Factors Chart</h3>
-            <p className="text-sm">
+            <p className="text-sm text-muted-foreground">
               This chart shows the impact of various factors on the overall happiness score (Ladder score) for {country}. 
               Each axis represents a different factor, and the area of the shape indicates the country's performance across these factors.
               The sum of these factors, along with the dystopia value and residual, equals the total Ladder score.
@@ -238,7 +276,7 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
           </PopoverContent>
         </Popover>
       </div>
-      <svg ref={svgRef} width="100%" height="100%" viewBox="0 0 700 700" preserveAspectRatio="xMidYMid meet" />
+      <svg ref={svgRef} width="63%" viewBox="0 0 700 700" preserveAspectRatio="xMidYMid meet" />
       <div className="mt-4 text-center">
         <p className="font-bold">Ladder Score: {parseFloat(ladderScore).toFixed(3)}</p>
         <p className="text-sm">
