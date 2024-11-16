@@ -10,9 +10,11 @@ import {
 
 interface RadarChartProps {
   country: string
+  comparisonType: string
+  comparisonLabel: string
 }
 
-const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
+const RadarChart: React.FC<RadarChartProps> = ({ country, comparisonType, comparisonLabel }) => {
   const { lastYearData } = useData()
   const svgRef = useRef<SVGSVGElement>(null)
 
@@ -44,6 +46,27 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
       return acc
     }, {} as { [key: string]: d3.ScaleLinear<number, number> })
   }, [lastYearData, features])
+
+  const comparisonData = useMemo(() => {
+    let dataToAverage = lastYearData.filter(d => features.every(feature => d[feature as keyof typeof d] !== undefined && d[feature as keyof typeof d] !== ''))
+    if (comparisonType !== 'global') {
+      const continents: { [key: string]: string[] } = {
+        europe: ["Finland", "Denmark", "Iceland", "Sweden", "Netherlands", "Norway", "Luxembourg", "Switzerland", "Austria", "Belgium", "Ireland", "Czechia", "Lithuania", "United Kingdom", "Slovenia", "Germany", "France", "Romania", "Estonia", "Poland", "Spain", "Serbia", "Malta", "Italy", "Slovakia", "Latvia", "Cyprus", "Portugal", "Hungary", "Croatia", "Greece", "Bosnia and Herzegovina", "Moldova", "Russia", "Montenegro", "Bulgaria", "North Macedonia", "Albania", "Ukraine"],
+        asia: ["Israel", "Kuwait", "United Arab Emirates", "Saudi Arabia", "Singapore", "Taiwan Province of China", "Japan", "South Korea", "Philippines", "Vietnam", "Thailand", "Malaysia", "China", "Bahrain", "Uzbekistan", "Kazakhstan", "Kyrgyzstan", "Mongolia", "Indonesia", "Armenia", "Tajikistan", "Georgia", "Iraq", "Nepal", "Laos", "Turkiye", "Iran", "Azerbaijan", "State of Palestine", "Pakistan", "Myanmar", "Cambodia", "Jordan", "India", "Sri Lanka", "Bangladesh", "Yemen", "Lebanon", "Afghanistan"],
+        africa: ["Mauritius", "Libya", "South Africa", "Algeria", "Congo (Brazzaville)", "Mozambique", "Gabon", "Ivory Coast", "Guinea", "Senegal", "Nigeria", "Cameroon", "Namibia", "Morocco", "Niger", "Burkina Faso", "Mauritania", "Gambia", "Chad", "Kenya", "Tunisia", "Benin", "Uganda", "Ghana", "Liberia", "Mali", "Madagascar", "Togo", "Egypt", "Ethiopia", "Tanzania", "Comoros", "Zambia", "Eswatini", "Malawi", "Botswana", "Zimbabwe", "Congo (Kinshasa)", "Sierra Leone", "Lesotho"],
+        northAmerica: ["Canada", "United States", "Mexico"],
+        southAmerica: ["Costa Rica", "Uruguay", "Chile", "Panama", "Brazil", "Argentina", "Guatemala", "Nicaragua", "El Salvador", "Paraguay", "Peru", "Dominican Republic", "Bolivia", "Ecuador", "Venezuela", "Colombia", "Honduras"],
+        oceania: ["Australia", "New Zealand"]
+      }
+      dataToAverage = dataToAverage.filter(d => continents[comparisonType].includes(d['Country name']))
+    }
+
+
+    return features.reduce((acc, feature) => {
+      acc[feature] = dataToAverage.reduce((sum, d) => sum + parseFloat(d[feature] as string), 0) / dataToAverage.length
+      return acc
+    }, {} as { [key: string]: number })
+  }, [lastYearData, comparisonType, features])
 
   useEffect(() => {
     if (!svgRef.current || !lastYearData.length || Object.keys(scales).length === 0) return
@@ -80,8 +103,8 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
         .attr("fill", "none")
         .attr("opacity", 0.3)
         .transition()
-        .delay(i * 200)
-        .duration(1000)
+        .delay(i * 100)
+        .duration(500)
         .attr("d", d3.lineRadial<number>()
           .angle((_, i) => i * Math.PI / 3)
           .radius(radialScale(r))
@@ -122,8 +145,8 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
         .attr("stroke", "gray")
         .attr("opacity", 0.3)
         .transition()
-        .delay(1000)
-        .duration(1000)
+        .delay(500)
+        .duration(500)
         .attr("x2", lineCoords.x)
         .attr("y2", lineCoords.y)
 
@@ -132,7 +155,12 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
       const labelY = labelRadius * Math.sin(angle)
 
       g.append("text")
-        .attr("x", labelX)
+        .attr("x", () => {
+          if (feature === "Explained by: Log GDP per capita" || feature === "Explained by: Freedom to make life choices") {
+            return labelX + 25
+          }
+          return labelX;
+          })
         .attr("y", labelY  - 10)
         .attr("text-anchor", labelX > 0 ? "start" : labelX < 0 ? "end" : "middle")
         .attr("dominant-baseline", labelY > 0 ? "hanging" : labelY < 0 ? "baseline" : "middle")
@@ -142,8 +170,8 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
         .attr("opacity", 0)
         .call(wrap, 100)
         .transition()
-        .delay(2000)
-        .duration(1000)
+        .delay(1000)
+        .duration(500)
         .attr("opacity", 1)
     })
 
@@ -169,8 +197,8 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
       .attr("fill-opacity", 0.3)
       .attr("stroke-width", 2)
       .transition()
-      .delay(3000)
-      .duration(1000)
+      .delay(1000)
+      .duration(500)
       .attrTween("d", function() {
         const interpolator = d3.interpolate([{x: 0, y: 0}], coordinates)
         return function(t) {
@@ -178,6 +206,33 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
         }
       })
 
+    // Draw comparison data
+    // Draw comparison data
+    const comparisonCoordinates = features.map((feature, i) => {
+      const angle = (i * Math.PI / 3) - Math.PI / 2
+      const value = parseValue(comparisonData[feature])
+      const scaledValue = scales[feature](value)
+      return angleToCoordinate(angle, scaledValue)
+    })
+
+    g.append("path")
+      .datum(comparisonCoordinates)
+      .attr("d", line([{x: 0, y: 0}]))
+      .attr("stroke", "blue")
+      .attr("fill", "blue")
+      .attr("fill-opacity", 0.1)
+      .attr("stroke-width", 2)
+      .attr("opacity", 0)
+      .transition()
+      .delay(2000)
+      .duration(500)
+      .attr("opacity", 1)
+      .attrTween("d", function() {
+        const interpolator = d3.interpolate([{x: 0, y: 0}], comparisonCoordinates)
+        return function(t) {
+          return line(interpolator(t))
+        }
+      })
     // Add data points and labels with animation
     coordinates.forEach((coord, index) => {
       const feature = features[index]
@@ -189,8 +244,8 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
         .attr("r", 4)
         .attr("fill", "hsl(var(--primary))")
         .transition()
-        .delay(3000 + index * 100)
-        .duration(500)
+        .delay(1500 + index * 50)
+        .duration(250)
         .attr("cx", coord.x)
         .attr("cy", coord.y)
 
@@ -213,10 +268,31 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
         .text(value.toFixed(3))
         .attr("opacity", 0)
         .transition()
-        .delay(3500 + index * 100)
-        .duration(500)
+        .delay(1750 + index * 50)
+        .duration(250)
         .attr("opacity", 1)
-    })
+
+      //labelY + labelYOffset + 20)
+
+      g.append("text")
+      .attr("x", labelX)
+      .attr("y", (d) => {
+        if (feature === "Explained by: Perceptions of corruption" || feature === "Explained by: Social support" || feature === "Explained by: Log GDP per capita") {
+          return labelY + labelYOffset - 20
+        }
+        return labelY + labelYOffset + 20
+      })
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle")
+      .attr("font-size", "14px")
+      .attr("fill", "blue")
+      .text(parseValue(comparisonData[feature]).toFixed(3))
+      .attr("opacity", 0)
+      .transition()
+      .delay(1800 + index * 50)
+      .duration(250)
+      .attr("opacity", 1)
+  })
 
     function angleToCoordinate(angle: number, value: number): { x: number; y: number } {
       const x = Math.cos(angle) * radialScale(value)
@@ -248,7 +324,7 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
         }
       });
     }
-  }, [country, lastYearData, features, scales])
+  }, [country, lastYearData, features, scales, comparisonData])
 
   const ladderScore = lastYearData.find(d => d['Country name'] === country)?.['Ladder score']
   const sumOfFactors = features.reduce((sum, feature) => {
@@ -272,6 +348,7 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
               Each axis represents a different factor, and the area of the shape indicates the country's performance across these factors.
               The sum of these factors, along with the dystopia value and residual, equals the total Ladder score.
               Each factor has its own scale, with the maximum value being the highest observed value for that factor across all countries.
+              The blue line represents the {comparisonLabel} for comparison.
             </p>
           </PopoverContent>
         </Popover>
@@ -282,6 +359,12 @@ const RadarChart: React.FC<RadarChartProps> = ({ country }) => {
         <p className="text-sm">
           (Sum of factors: {sumOfFactors.toFixed(3)} + Dystopia value + Residual: {residualValue.toFixed(3)})
         </p>
+        <div className="mt-2 flex space-x-2 items-center justify-center">
+          <div className="w-4 h-4 bg-blue-500"></div>
+          <span className="text-sm">{comparisonLabel}</span>
+          <div className="w-4 h-4 bg-primary mr-2"></div>
+          <span className="text-sm">{country}</span>
+        </div>
       </div>
     </div>
   )

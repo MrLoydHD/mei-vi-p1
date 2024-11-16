@@ -33,12 +33,14 @@ export default function PercentDifferenceChart({ selectedCountry, comparisonType
   useEffect(() => {
     if (!chartRef.current || !lastYearData.length) return
 
+    const xAxisColor = "hsl(var(--primary))"
+
     const svg = d3.select(chartRef.current)
     svg.selectAll("*").remove()
 
-    const width = 600
+    const width = 700
     const height = 400
-    const margin = { top: 60, right: 20, bottom: 40, left: 60 }
+    const margin = { top: 60, right: 100, bottom: 60, left: 60 }
     const chartWidth = width - margin.left - margin.right
     const chartHeight = height - margin.top - margin.bottom
 
@@ -83,10 +85,17 @@ export default function PercentDifferenceChart({ selectedCountry, comparisonType
     chart.append("g")
       .attr("transform", `translate(0,${chartHeight / 2})`)
       .call(d3.axisBottom(x).tickSize(0))
+      .attr("color", xAxisColor)
       .selectAll("text").remove()
 
     chart.append("g")
       .call(d3.axisLeft(y).tickFormat(d => `${d}%`))
+
+    // Add grid
+    chart.append("g")
+      .attr("class", "grid")
+      .attr("opacity", 0.1)
+      .call(d3.axisLeft(y).tickSize(-chartWidth).tickFormat(() => ""))
 
     chart.append("line")
       .attr("x1", 0)
@@ -171,7 +180,37 @@ export default function PercentDifferenceChart({ selectedCountry, comparisonType
       .style("text-anchor", "middle")
       .text("Percentage Difference")
 
+    const legendText = `${comparisonType === 'global' ? 'Global' : comparisonType.charAt(0).toUpperCase() + comparisonType.slice(1)} Average`
+
+    const legendTextLines = legendText.split(' '); // Divida o texto em duas partes
+
+    chart.append("text")
+      .attr("x", chartWidth + 10)
+      .attr("y", chartHeight / 2 - 10) // Ajuste a posição vertical para a primeira linha
+      .attr("text-anchor", "start")
+      .attr("dominant-baseline", "middle")
+      .style("font-size", "14px")
+      .text(legendTextLines[0]); // Primeira linha do texto
+    
+    chart.append("text")
+      .attr("x", chartWidth + 10)
+      .attr("y", chartHeight / 2 + 10) // Ajuste a posição vertical para a segunda linha
+      .attr("text-anchor", "start")
+      .attr("dominant-baseline", "middle")
+      .style("font-size", "14px")
+      .text(legendTextLines[1]); // Segunda linha do texto
+
+
+    // Update chart title
+    chart.append("text")
+      .attr("x", chartWidth / 2)
+      .attr("y", -margin.top / 2)
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .style("font-weight", "bold")
+      .text(`${selectedCountry} vs ${legendText}`)
+
   }, [selectedCountry, comparisonType, lastYearData])
 
-  return <svg ref={chartRef} width="100%" height="100%" />
+  return <svg ref={chartRef} width="100%" height="460px" />
 }

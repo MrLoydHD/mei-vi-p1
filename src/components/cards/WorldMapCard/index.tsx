@@ -19,7 +19,7 @@ export default function WorldMapCard({ onCountrySelect, selectedCountry }: World
     <Card className="border-primary h-full flex flex-col">
       <CardContent className="p-4 md:p-6 flex-grow flex flex-col">
         <div className="flex justify-between items-center mb-2 md:mb-4">
-          <h2 className="text-xl md:text-2xl font-bold">World Happiness Map</h2>
+          <h2 className="text-xl md:text-2xl font-bold">World Happiness Map 2024</h2>
           <Popover open={isInfoOpen} onOpenChange={setIsInfoOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline">What does this mean?</Button>

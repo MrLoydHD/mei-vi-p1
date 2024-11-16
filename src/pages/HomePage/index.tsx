@@ -14,10 +14,21 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import CountryComparisonHeatmapCard from '@/components/cards/CountryComparisonHeatmapCard'
 
 
+const comparisonOptions = [
+  { value: 'global', label: 'Global Average' },
+  { value: 'europe', label: 'Europe Average' },
+  { value: 'asia', label: 'Asia Average' },
+  { value: 'africa', label: 'Africa Average' },
+  { value: 'northAmerica', label: 'North America Average' },
+  { value: 'southAmerica', label: 'South America Average' },
+  { value: 'oceania', label: 'Oceania Average' },
+]
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState("tab1")
   const { lastYearData, isLoading } = useData()
   const [selectedCountry, setSelectedCountry] = useState("Finland")
+  const [comparisonType, setComparisonType] = useState("global")
   const [isInfoOpen, setIsInfoOpen] = useState(false)
 
   const handleCountrySelect = (country) => {
@@ -77,24 +88,42 @@ export default function HomePage() {
               </Card>
             </div>
             <div className="lg:col-span-1 grid grid-cols-1 gap-4">
-              <Card className="border-primary">
+            <Card className="border-primary">
                 <CardContent className="p-4 md:p-6">
-                  <Select value={selectedCountry} onValueChange={setSelectedCountry} defaultValue={selectedCountry}>
-                    <SelectTrigger className="w-full mb-4">
-                      <SelectValue placeholder="Select a country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {lastYearData.map((country) => (
-                        <SelectItem key={country['Country name']} value={country['Country name']}>
-                          {country['Country name']}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="h-full mt-4">
-                    <RadarChart country={selectedCountry} />
+                  <div className="flex flex-col md:flex-row gap-4 mb-4">
+                    <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                      <SelectTrigger className="w-full md:w-1/2">
+                        <SelectValue placeholder="Select a country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {lastYearData.map((country) => (
+                          <SelectItem key={country['Country name']} value={country['Country name']}>
+                            {country['Country name']}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={comparisonType} onValueChange={setComparisonType}>
+                      <SelectTrigger className="w-full md:w-1/2">
+                        <SelectValue placeholder="Select comparison type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {comparisonOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-              </CardContent>
+                  <div className="h-full mt-4">
+                    <RadarChart 
+                      country={selectedCountry} 
+                      comparisonType={comparisonType}
+                      comparisonLabel={comparisonOptions.find(o => o.value === comparisonType)?.label || ''}
+                    />
+                  </div>
+                </CardContent>
               </Card>
               <PercentDifferenceCard 
                 selectedCountry={selectedCountry}
@@ -109,14 +138,14 @@ export default function HomePage() {
           </div>
         </TabsContent>
         <TabsContent value="tab2" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="lg:col-span-12">
               <CountriesComparasionCard />
             </div>
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-5">
               <CountryComparisonHeatmapCard />
             </div>
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-7">
               <Card className="border-primary h-full">
                 <CardContent className="p-4 md:p-6">
                   <h2 className="text-xl md:text-2xl font-bold mb-4">Additional Insights</h2>
