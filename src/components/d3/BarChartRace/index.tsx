@@ -10,7 +10,7 @@ const BarChartRace: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [currentYear, setCurrentYear] = useState(2005)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [dimensions, setDimensions] = useState({ width: 700, height: 400 })
+  const [dimensions, setDimensions] = useState({ width: 800, height: 800 })
 
   const colorScale = useMemo(() => {
     const uniqueCountries = Array.from(new Set(timeSeriesData.map(d => d['Country name'])))
@@ -22,8 +22,7 @@ const BarChartRace: React.FC = () => {
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
-        const { width } = containerRef.current.getBoundingClientRect()
-        setDimensions({ width: Math.min(width, 700), height: 400 })
+        setDimensions({ width: 800, height: 800 })
       }
     }
 
@@ -37,7 +36,7 @@ const BarChartRace: React.FC = () => {
     if (!svgRef.current || !timeSeriesData.length) return
 
     const svg = d3.select(svgRef.current)
-    const margin = { top: 40, right: 120, bottom: 30, left: 200 }
+    const margin = { top: 40, right: 10, bottom: 30, left: 130 }
     const width = dimensions.width - margin.left - margin.right
     const height = dimensions.height - margin.top - margin.bottom
 
@@ -150,6 +149,7 @@ const BarChartRace: React.FC = () => {
 
       svg.select('.title')
         .text(`Top 15 Countries by Life Ladder Score in ${year}`)
+        .attr('x', width / 2 + margin.left)
     }
 
     // Initial setup
@@ -288,6 +288,7 @@ const BarChartRace: React.FC = () => {
 
       svg.select('.title')
         .text(`Top 15 Countries by Life Ladder Score in ${year}`)
+        .attr('x', width / 2 + margin.left)
     }
 
     updateChart(currentYear, prevYear)
@@ -322,7 +323,7 @@ const BarChartRace: React.FC = () => {
   }
 
   return (
-    <div ref={containerRef} className="w-full h-[450px] flex flex-col items-center">
+    <div ref={containerRef} className="w-full h-[700px] flex flex-col items-center">
       <div className="w-full max-w-[800px]">
         <div className="flex space-x-2 mb-4">
           <Button onClick={handlePlayPause} variant="outline" size="icon">
@@ -332,7 +333,7 @@ const BarChartRace: React.FC = () => {
             <RotateCcw className="h-4 w-4" />
           </Button>
         </div>
-        <div className="w-full h-[400px]">
+        <div className="w-full h-[800px]">
           <svg ref={svgRef} width={dimensions.width} height={dimensions.height} className="w-full h-full" />
         </div>
       </div>

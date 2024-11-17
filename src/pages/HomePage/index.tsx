@@ -1,17 +1,21 @@
 import React, { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useData } from '@/contexts/data'
 import WorldMapCard from '@/components/cards/WorldMapCard'
 import BarChartRaceCard from '@/components/cards/BarChartRaceCard'
 import PercentDifferenceCard from '@/components/cards/PercentDifferenceCard'
 import CountriesComparasionCard from '@/components/cards/CountriesComparasionCard'
+import CountryComparisonHeatmapCard from '@/components/cards/CountryComparisonHeatmapCard'
+import { SuggestionForm } from '@/components/cards/SuggestionForms'
+import TreeMapCard from '@/components/cards/TreeMapCard'
 import RadarChart from '@/components/d3/RadarChart'
 import TrendChart from '@/components/d3/TrendChart'
+import StackedBarChart from '@/components/d3/StackedBarChart'
+import SlopeChart from '@/components/d3/SlopeChart'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import CountryComparisonHeatmapCard from '@/components/cards/CountryComparisonHeatmapCard'
 
 
 const comparisonOptions = [
@@ -26,14 +30,27 @@ const comparisonOptions = [
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState("tab1")
-  const { lastYearData, isLoading } = useData()
+  const { lastYearData, isLoading, timeSeriesData } = useData()
   const [selectedCountry, setSelectedCountry] = useState("Finland")
   const [comparisonType, setComparisonType] = useState("global")
   const [isInfoOpen, setIsInfoOpen] = useState(false)
+  const [selectedCountries, setSelectedCountries] = useState({
+    country1: "Finland",
+    country2: "Denmark"
+  });
+
+  const countries = Array.from(new Set(timeSeriesData.map(d => d['Country name']))).sort()
 
   const handleCountrySelect = (country) => {
     setSelectedCountry(country)
   }
+
+  const handleCountryChange = (country, index) => {
+    setSelectedCountries(prev => ({
+      ...prev,
+      [`country${index}`]: country
+    }));
+  };
 
   if (isLoading) {
     return <div>Loading...</div>
@@ -129,35 +146,75 @@ export default function HomePage() {
                 selectedCountry={selectedCountry}
                 onCountryChange={setSelectedCountry}
               />
-              {/* <PercentDifferenceDebug 
-                selectedCountry={selectedCountry}
-                onCountryChange={setSelectedCountry}
-              /> */}
-
             </div>
           </div>
         </TabsContent>
         <TabsContent value="tab2" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div className="lg:col-span-12">
-              <CountriesComparasionCard />
+              <CountriesComparasionCard handleCountryChange={handleCountryChange} selectedCountries={selectedCountries} />
             </div>
             <div className="lg:col-span-5">
-              <CountryComparisonHeatmapCard />
+              <CountryComparisonHeatmapCard handleCountryChange={handleCountryChange} selectedCountries={selectedCountries} />
             </div>
-            <div className="lg:col-span-7">
-              <Card className="border-primary h-full">
-                <CardContent className="p-4 md:p-6">
-                  <h2 className="text-xl md:text-2xl font-bold mb-4">Additional Insights</h2>
-                  {/* Add content for the second small card here */}
-                  <p>This card will provide additional insights or metrics for the comparison.</p>
+            <div className="lg:col-span-7 border border-primary rounded-lg">
+            <Card className="border-none shadow-none">
+                <CardHeader>
+                  <CardTitle>Country Comparison</CardTitle>
+                  <CardDescription>Compare happiness factors between two countries</CardDescription>
+                  <div className="flex space-x-4 w-full">
+                    <Select value={selectedCountries.country1} onValueChange={(country) => handleCountryChange(country, 1)}>
+                      <SelectTrigger className="w-1/2">
+                        <SelectValue placeholder="Select country 1" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {countries.map(country => (
+                          <SelectItem key={country} value={country}>{country}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={selectedCountries.country2} onValueChange={(country) => handleCountryChange(country, 2)}>
+                      <SelectTrigger className="w-1/2">
+                        <SelectValue placeholder="Select country 2" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {countries.map(country => (
+                          <SelectItem key={country} value={country}>{country}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Tabs defaultValue="bar" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 bg-primary bg-opacity-30">
+                      <TabsTrigger value="bar">Bar Chart</TabsTrigger>
+                      <TabsTrigger value="slope">Slope Chart</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="bar">
+                      <StackedBarChart country1={selectedCountries.country1} country2={selectedCountries.country2} />
+                    </TabsContent>
+                    <TabsContent value="slope">
+                      <SlopeChart country1={selectedCountries.country1} country2={selectedCountries.country2} />
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             </div>
           </div>
         </TabsContent>
         <TabsContent value="tab3" className="space-y-4">
-          {/* Content for tab3 remains unchanged */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className='lg:col-span-1'>
+              <BarChartRaceCard />
+            </div>
+            <div className='lg:col-span-1'>
+              <TreeMapCard />
+            </div>
+            <div className='lg:col-span-2'>
+              <SuggestionForm />
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

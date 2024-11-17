@@ -10,10 +10,14 @@ import DivergingBarChart from '@/components/d3/CountriesComparasionChart'
 import { motion, AnimatePresence } from 'framer-motion'
 import * as d3 from 'd3'
 
-export default function CountriesComparasionCard() {
+interface CountriesComparasionCardProps {
+  handleCountryChange: (value: string, index: number) => void;
+  selectedCountries: { country1: string; country2: string };
+}
+
+export default function CountriesComparasionCard({ handleCountryChange, selectedCountries }: CountriesComparasionCardProps) {
     const { timeSeriesData } = useData()
-    const [country1, setCountry1] = useState<string>("Portugal")
-    const [country2, setCountry2] = useState<string>("Finland")
+    const { country1, country2 } = selectedCountries
     const [year1, setYear1] = useState<number>(2023)
     const [year2, setYear2] = useState<number>(2023)
     const [availableYears1, setAvailableYears1] = useState<number[]>([])
@@ -66,7 +70,7 @@ export default function CountriesComparasionCard() {
 
       const xScale = d3.scaleLinear().domain([0, 100]).range([0, width])
 
-            // Use Tableau10 colors
+      // Use Tableau10 colors
       const blueColor = d3.schemeTableau10[0]  // Blue
       const purpleColor = d3.schemeTableau10[6]  // Purple
 
@@ -78,11 +82,11 @@ export default function CountriesComparasionCard() {
         .append("rect")
         .attr("x", 0)
         .attr("y", 0)
-        .attr("width", xScale(score1Percentage) + 20) // Ajuste a largura para incluir o arredondamento
+        .attr("width", xScale(score1Percentage) + 20)
         .attr("height", height)
         .attr("rx", 20)
         .attr("ry", 20)
-        .attr("transform", `translate(+${20}, 0)`); // Ajuste a posição para arredondar apenas o lado esquerdo
+        .attr("transform", `translate(+${20}, 0)`);
       
       svg.append("rect")
         .attr("x", 0)
@@ -92,7 +96,7 @@ export default function CountriesComparasionCard() {
         .attr("fill", purpleColor)
         .attr("clip-path", `url(#${clipPathIdLeft})`);
 
-        const clipPathId = "clip-path-rounded-right";
+      const clipPathId = "clip-path-rounded-right";
 
       svg.append("defs")
         .append("clipPath")
@@ -104,7 +108,7 @@ export default function CountriesComparasionCard() {
         .attr("height", height)
         .attr("rx", 20)
         .attr("ry", 20)
-        .attr("transform", `translate(-${20}, 0)`); // Ajuste a posição para arredondar apenas o lado direito
+        .attr("transform", `translate(-${20}, 0)`);
       
       svg.append("rect")
         .attr("x", xScale(score1Percentage))
@@ -131,11 +135,6 @@ export default function CountriesComparasionCard() {
         .text(`${score2Percentage.toFixed(1)}%`)
 
     }, [score1, score2])
-  
-    const handleCountryChange = (value: string, index: number) => {
-      if (index === 0) setCountry1(value)
-      else setCountry2(value)
-    }
   
     const handleYearChange = (year: number, index: number, dir: number) => {
       if (index === 0) {
@@ -236,7 +235,7 @@ export default function CountriesComparasionCard() {
             </div>
           </div>
           <div className="flex items-center justify-between mb-6">
-            <Select value={country1} onValueChange={(value) => handleCountryChange(value, 0)}>
+            <Select value={country1} onValueChange={(value) => handleCountryChange(value, 1)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>
@@ -249,7 +248,7 @@ export default function CountriesComparasionCard() {
             <div className="w-full mx-4">
               <svg ref={svgRef} width="100%" height="40" />
             </div>
-            <Select value={country2} onValueChange={(value) => handleCountryChange(value, 1)}>
+            <Select value={country2} onValueChange={(value) => handleCountryChange(value, 2)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>

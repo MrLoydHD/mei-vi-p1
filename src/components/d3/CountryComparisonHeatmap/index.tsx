@@ -286,7 +286,7 @@ const CountriesComparasionChart: React.FC<CountriesComparasionChartProps> = ({ c
 
   return (
     <div className="flex flex-col items-center">
-      <svg ref={svgRef} width="80%" viewBox="0 0 700 700" preserveAspectRatio="xMidYMid meet" />
+      <svg ref={svgRef} width="83%" viewBox="0 0 700 700" preserveAspectRatio="xMidYMid meet" />
       <div className="mt-4 text-center">
         <div className="grid grid-cols-2 gap-4">
           <div>

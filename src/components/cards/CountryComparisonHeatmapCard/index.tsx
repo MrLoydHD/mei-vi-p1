@@ -8,10 +8,15 @@ import CountryComparisonHeatmap from '@/components/d3/CountryComparisonHeatmap'
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
-export default function CountryComparisonHeatmapCard() {
+interface CountriesComparasionCardProps {
+  handleCountryChange: (value: string, index: number) => void;
+  selectedCountries: { country1: string; country2: string };
+}
+
+
+export default function CountryComparisonHeatmapCard({ handleCountryChange, selectedCountries }: CountriesComparasionCardProps) {
   const { lastYearData } = useData()
-  const [country1, setCountry1] = useState<string>("Finland")
-  const [country2, setCountry2] = useState<string>("Denmark")
+  const { country1, country2 } = selectedCountries
 
   const countries = lastYearData.map(d => d['Country name']).sort()
 
@@ -19,7 +24,7 @@ export default function CountryComparisonHeatmapCard() {
     <Card className="border-primary">
       <CardContent className="p-4 md:p-6">
         <div className="flex justify-between w-full">
-          <h2 className="text-xl md:text-2xl font-bold mb-4">Country Comparison Heatmap</h2>
+          <h2 className="text-xl md:text-2xl font-bold mb-4">Country Comparison Radar</h2>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline">What does this mean?</Button>
@@ -36,7 +41,7 @@ export default function CountryComparisonHeatmapCard() {
           </Popover>
         </div>
         <div className="flex justify-between items-center mb-4">
-          <Select value={country1} onValueChange={setCountry1}>
+          <Select value={country1} onValueChange={(value) => handleCountryChange(value, 1)}>
             <SelectTrigger className="w-[280px]">
               <SelectValue placeholder="Select country 1" />
             </SelectTrigger>
@@ -46,8 +51,7 @@ export default function CountryComparisonHeatmapCard() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={country2} onValueChange={setCountry2}>
-            <SelectTrigger className="w-[280px]">
+          <Select value={country2} onValueChange={(value) => handleCountryChange(value, 2)}>            <SelectTrigger className="w-[280px]">
               <SelectValue placeholder="Select country 2" />
             </SelectTrigger>
             <SelectContent>
