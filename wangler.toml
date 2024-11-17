@@ -1,0 +1,6 @@
+name = "mei-vi-p1"
+type = "javascript"
+
+[build]
+command = "yarn build"
+directory = "dist"
