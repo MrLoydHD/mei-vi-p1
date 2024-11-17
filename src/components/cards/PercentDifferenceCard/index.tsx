@@ -5,7 +5,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button"
 import { useData } from '@/contexts/data'
 import PercentDifferenceChart from '@/components/d3/PercentDifferenceChart'
-import { InfoIcon } from 'lucide-react'
 
 interface PercentDifferenceCardProps {
   selectedCountry: string

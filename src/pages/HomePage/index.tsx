@@ -29,7 +29,7 @@ const comparisonOptions = [
 ]
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState("tab1")
+  const [, setActiveTab] = useState("tab1")
   const { lastYearData, isLoading, timeSeriesData } = useData()
   const [selectedCountry, setSelectedCountry] = useState("Finland")
   const [comparisonType, setComparisonType] = useState("global")
@@ -41,11 +41,11 @@ export default function HomePage() {
 
   const countries = Array.from(new Set(timeSeriesData.map(d => d['Country name']))).sort()
 
-  const handleCountrySelect = (country) => {
+  const handleCountrySelect = (country: React.SetStateAction<string>) => {
     setSelectedCountry(country)
   }
 
-  const handleCountryChange = (country, index) => {
+  const handleCountryChange = (country: string, index: number) => {
     setSelectedCountries(prev => ({
       ...prev,
       [`country${index}`]: country

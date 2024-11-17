@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Info } from "lucide-react"
 import InteractiveGlobe from '@/components/d3/InteractiveGlobe'
 
 interface WorldMapCardProps {

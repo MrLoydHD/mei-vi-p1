@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useRef, useState, useMemo } from 'react'
 import * as d3 from 'd3'
 import { useData } from '@/contexts/data'
@@ -143,9 +144,10 @@ const BarChartRace: React.FC = () => {
         .attr('opacity', 0)
         .remove()
 
-      g.select('.x-axis')
+        g.select('.x-axis')
         .transition(t)
-        .call(d3.axisTop(x).ticks(5))
+        .call((transition) => d3.axisTop(x).ticks(5)(transition as any));
+      
 
       svg.select('.title')
         .text(`Top 15 Countries by Life Ladder Score in ${year}`)
@@ -284,7 +286,7 @@ const BarChartRace: React.FC = () => {
 
       g.select('.x-axis')
         .transition(t)
-        .call(d3.axisTop(x).ticks(5))
+        .call((transition) => d3.axisTop(x).ticks(5)(transition as any));
 
       svg.select('.title')
         .text(`Top 15 Countries by Life Ladder Score in ${year}`)

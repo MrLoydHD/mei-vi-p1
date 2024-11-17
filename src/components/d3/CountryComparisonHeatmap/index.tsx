@@ -1,15 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable prefer-const */
 "use client"
 
 import React, { useEffect, useRef, useMemo } from 'react'
 import * as d3 from 'd3'
 import { useData } from '@/contexts/data'
-import { Button } from "@/components/ui/button"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-
+import { HappinessData } from '@/lib/types'
 interface CountriesComparasionChartProps {
   country1: string
   country2: string
@@ -31,7 +27,7 @@ const CountriesComparasionChart: React.FC<CountriesComparasionChartProps> = ({ c
     "Explained by: Perceptions of corruption"
   ], [])
 
-  const parseValue = (value: any): number => {
+  const parseValue = (value: string | number) => {
     if (typeof value === 'number') return value
     if (typeof value === 'string') {
       return parseFloat(value.replace(',', '.'))
@@ -160,7 +156,7 @@ const CountriesComparasionChart: React.FC<CountriesComparasionChartProps> = ({ c
     })
 
     // Draw data for both countries
-    const drawCountryData = (data: any, color: string, delay: number) => {
+    const drawCountryData = (data: HappinessData, color: string, delay: number) => {
       const coordinates = features.map((feature, i) => {
         const angle = (i * Math.PI / 3) - Math.PI / 2
         const value = parseValue(data[feature as keyof typeof data])
@@ -251,6 +247,7 @@ const CountriesComparasionChart: React.FC<CountriesComparasionChartProps> = ({ c
             y = text.attr("y"),
             dy = parseFloat(text.attr("dy") || "0"),
             tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
+        // eslint-disable-next-line no-cond-assign
         while (word = words.pop()) {
           line.push(word);
           tspan.text(line.join(" "));

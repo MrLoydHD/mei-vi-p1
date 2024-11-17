@@ -157,7 +157,7 @@ export default function PercentDifferenceChart({ selectedCountry, comparisonType
         const words = d.metric.replace('Explained by: ', '').replace('Log GDP per capita', 'GDP').split(' ');
         const text = d3.select(this);
         const lineHeight = 1.1; // ems
-        let dy = d.percentDifference >= 0 ? 0 : -((words.length - 1) * lineHeight);
+        const dy = d.percentDifference >= 0 ? 0 : -((words.length - 1) * lineHeight);
 
         text.text(null);
         for (let i = 0; i < words.length; i++) {

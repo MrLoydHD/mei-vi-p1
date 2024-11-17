@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
-import { HappinessData } from '@/lib/types'
 
 interface TreeMapNode {
   name: string
@@ -85,27 +84,27 @@ const TreeMapChart: React.FC<TreeMapChartProps> = ({ data, onNodeClick, metric, 
         const dx = d.x1 - d.x0
         const dy = d.y1 - d.y0
         transition.call(
-          (t: any) => g.transition(t)
+          (t: d3.Transition<SVGSVGElement, unknown, null, undefined>) => g.transition(t)
             .attr("transform", `translate(${margin.left},${margin.top}) scale(${width / dx},${height / dy}) translate(${-x},${-y})`)
         )
       } else {
         transition.call(
-          (t: any) => g.transition(t)
+          (t: d3.Transition<SVGSVGElement, unknown, null, undefined>) => g.transition(t)
             .attr("transform", `translate(${margin.left},${margin.top})`)
         )
       }
     }
 
     const cell = g.selectAll("g")
-      .data(nodes, (d: any) => d.data.name)
+      .data(nodes, (d: d3.HierarchyRectangularNode<TreeMapNode>) => d.data.name)
       .join(
         enter => enter.append("g")
-          .attr("transform", d => `translate(${d.x0},${d.y0})`)
+          .attr("transform", d => `translate(${(d as d3.HierarchyRectangularNode<TreeMapNode>).x0},${(d as d3.HierarchyRectangularNode<TreeMapNode>).y0})`)
           .call(enter => enter.append("rect")
             .attr("id", d => d.data.name.replace(/\s+/g, ''))
             .attr("width", 0)
             .attr("height", 0)
-            .attr("fill", d => colorScale(showingContinent ? d.data.name : d.parent!.data.name))
+            .attr("fill", d => colorScale(showingContinent ? d.data.name : d.parent!.data.name) as string)
             .attr("opacity", 0.9)
             .attr("cursor", "pointer")
           ),
@@ -115,8 +114,8 @@ const TreeMapChart: React.FC<TreeMapChartProps> = ({ data, onNodeClick, metric, 
       .on("click", (event, d) => {
         if (showingContinent) {
           hideTooltip();
-          setSelectedContinent(d);
-          zoom(d);
+          setSelectedContinent(d as d3.HierarchyRectangularNode<TreeMapNode>);
+          zoom(d as d3.HierarchyRectangularNode<TreeMapNode>);
           onNodeClick(d.data);
         }
       })
@@ -132,10 +131,10 @@ const TreeMapChart: React.FC<TreeMapChartProps> = ({ data, onNodeClick, metric, 
       .on("mouseout", hideTooltip);
 
     cell.transition().duration(750)
-      .attr("transform", d => `translate(${d.x0},${d.y0})`)
+      .attr("transform", d => `translate(${(d as d3.HierarchyRectangularNode<TreeMapNode>).x0},${(d as d3.HierarchyRectangularNode<TreeMapNode>).y0})`)
       .select("rect")
-        .attr("width", d => Math.max(0, d.x1 - d.x0))
-        .attr("height", d => Math.max(0, d.y1 - d.y0));
+        .attr("width", d => Math.max(0, (d as d3.HierarchyRectangularNode<TreeMapNode>).x1 - (d as d3.HierarchyRectangularNode<TreeMapNode>).x0))
+        .attr("height", d => Math.max(0, (d as d3.HierarchyRectangularNode<TreeMapNode>).y1 - (d as d3.HierarchyRectangularNode<TreeMapNode>).y0))
 
     cell.select("text").remove();
     cell.append("text")

@@ -127,7 +127,7 @@ export default function PercentDifferenceCard({ selectedCountry, onCountryChange
       .attr("x", d => x(d.metric)! + x.bandwidth() / 2)
       .attr("y", -10)
       .attr("text-anchor", "middle")
-      .attr("transform", (d, i) => `rotate(-45, ${x(d.metric)! + x.bandwidth() / 2}, -10)`)
+      .attr("transform", (d) => `rotate(-45, ${x(d.metric)! + x.bandwidth() / 2}, -10)`)
       .text(d => d.metric)
       .attr("fill", "black")
       .attr("font-size", "10px")

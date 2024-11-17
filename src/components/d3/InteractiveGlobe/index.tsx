@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import React, { useEffect, useRef, useState } from 'react'
@@ -10,6 +11,8 @@ import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Info } from "lucide-react"
 import { Button } from '@/components/ui/button'
+import { Topology } from 'topojson-specification';
+
 
 // Country name mapping
 const countryNameMapping: { [key: string]: string } = {
@@ -38,14 +41,14 @@ interface InteractiveGlobeProps {
   selectedCountry: string
 }
 
-export default function InteractiveGlobe({ onCountrySelect, selectedCountry }: InteractiveGlobeProps) {
+export default function InteractiveGlobe({ onCountrySelect, selectedCountry }: Readonly<InteractiveGlobeProps>) {
   const svgRef = useRef<SVGSVGElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
   const { lastYearData, timeSeriesData, isLoading } = useData()
   const [showLegacy, setShowLegacy] = useState(false)
-  const [selectedCountryState, setSelectedCountryState] = useState<d3.GeoPermissibleObjects | null>(null)
+  const [, setSelectedCountryState] = useState<d3.GeoPermissibleObjects | null>(null)
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -63,20 +66,21 @@ export default function InteractiveGlobe({ onCountrySelect, selectedCountry }: I
   const getLegacyData = (countryName: string) : HappinessData | undefined => {
     const countryData = timeSeriesData.filter(d => d['Country name'] === countryName)
     if (countryData.length === 0) return undefined
-    return countryData.reduce((prev, current) => (prev.year > current.year) ? prev : current)
+    return countryData.reduce((prev: HappinessData, current: HappinessData) => (prev.year > current.year) ? prev : current)
   }
 
   const getDisplayData = () => {
     if (!showLegacy) return lastYearData
     const legacyData = legacyCountries.map(country => getLegacyData(country)).filter(Boolean) as HappinessData[]
     return legacyData.map(d => ({
+      ...d,
       'Country name': d['Country name'],
       'Ladder score': d['Life Ladder'],
       year: d.year
     }))
   }
-
-  let worldData: any;
+  
+  let worldData: Topology;
 
   useEffect(() => {
     if (!svgRef.current || isLoading || lastYearData.length === 0 || dimensions.width === 0) return
@@ -122,10 +126,7 @@ export default function InteractiveGlobe({ onCountrySelect, selectedCountry }: I
       const mappedName = countryNameMapping[countryName] || countryName
       const countryData = displayData.find(item => item['Country name'] === mappedName)
       if (countryData) {
-        return {
-          ...countryData,
-          score: countryData['Ladder score'] || countryData['Life Ladder']
-        }
+        return countryData
       }
       return undefined
     }
@@ -133,7 +134,7 @@ export default function InteractiveGlobe({ onCountrySelect, selectedCountry }: I
     d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
       .then((data: any) => {
         worldData = data;
-        const countryShapes = feature(worldData, worldData.objects.countries).features
+        const countryShapes = (feature(worldData, worldData.objects.countries) as GeoJSON.FeatureCollection).features
 
 
         svg.selectAll(".country")
@@ -143,16 +144,17 @@ export default function InteractiveGlobe({ onCountrySelect, selectedCountry }: I
           .attr("d", path as any)
           .attr("fill", (d: any) => {
             const countryDataItem = findCountryData(d.properties.name)
-            return countryDataItem ? colorScale(countryDataItem.score) : '#ccc'
+            return countryDataItem ? colorScale(countryDataItem['Ladder score'] || countryDataItem['Life Ladder']) : '#ccc'
           })
           .attr("stroke", "#000")
           .attr("stroke-width", 0.1)
-          .style("cursor", d => findCountryData(d.properties.name) ? "pointer" : "default")
+          .style("cursor", (d: any) => findCountryData(d.properties.name) ? "pointer" : "default")
           .on("mousemove", function(event, d: any) {
             const countryDataItem = findCountryData(d.properties.name)
             let tooltipContent = `${d.properties.name}<br/>`
             if (countryDataItem) {
-              tooltipContent += `Av. Life Evaluation: ${countryDataItem.score.toFixed(2)}`
+              const score = countryDataItem['Ladder score'] || countryDataItem['Life Ladder'];
+              tooltipContent += `Av. Life Evaluation: ${score.toFixed(2)}`
               if ('year' in countryDataItem) {
                 tooltipContent += `<br/>Year: ${countryDataItem.year}`
               }
@@ -180,8 +182,8 @@ export default function InteractiveGlobe({ onCountrySelect, selectedCountry }: I
 
           if (selectedCountry) {
             const country = countryShapes.find((d: any) => {
-              const countryDataItem = findCountryData(d.properties.name)
-              const countryName = countryNameMapping[d.properties.name] || d.properties.name
+              const countryDataItem = findCountryData(d.properties.name) 
+              const countryName = countryNameMapping[d.properties.name] || d.properties.name 
               return countryDataItem && countryName === selectedCountry
             })
             if (country) {
@@ -197,9 +199,9 @@ export default function InteractiveGlobe({ onCountrySelect, selectedCountry }: I
           d3.transition()
             .duration(1000)
             .tween("rotate", () => (t: number) => {
-              projection.rotate(r(t))
+              projection.rotate(r(t) as [number, number])
               path = d3.geoPath().projection(projection)
-              svg.selectAll(".country").attr("d", path as any)
+              svg.selectAll(".country").attr("d", path as d3.ValueFn<SVGSVGElement, unknown, string>)
             })
             .transition()
             .duration(750)
@@ -207,7 +209,7 @@ export default function InteractiveGlobe({ onCountrySelect, selectedCountry }: I
               const scale = d3.interpolate(projection.scale(), initialScale * zoomLevel)(t)
               projection.scale(scale)
               path = d3.geoPath().projection(projection)
-              svg.selectAll(".country").attr("d", path as any)
+              svg.selectAll(".country").attr("d", path as d3.ValueFn<SVGSVGElement, unknown, string>)
               globeBackground.attr("r", scale)
               globeBorder.attr("r", scale)
                 .attr("stroke-width", 0.2 / (scale / initialScale))
@@ -241,7 +243,7 @@ export default function InteractiveGlobe({ onCountrySelect, selectedCountry }: I
 
             projection.rotate(rotate);
             path = d3.geoPath().projection(projection);
-            svg.selectAll(".country").attr("d", path as any);
+            svg.selectAll(".country").attr("d", path as d3.ValueFn<SVGSVGElement, unknown, string>);
 
             rotateStart = [event.x, event.y];
           })
@@ -259,7 +261,7 @@ export default function InteractiveGlobe({ onCountrySelect, selectedCountry }: I
             const { transform } = event;
             projection.scale(initialScale * transform.k);
             path = d3.geoPath().projection(projection);
-            svg.selectAll('.country').attr('d', path as any);
+            svg.selectAll('.country').attr('d', path as d3.ValueFn<SVGSVGElement, unknown, string>);
             globeBackground.attr("r", initialScale * transform.k);
             globeBorder.attr("r", initialScale * transform.k)
               .attr("stroke-width", 0.2 / transform.k);
@@ -287,7 +289,7 @@ export default function InteractiveGlobe({ onCountrySelect, selectedCountry }: I
 
         const legendAxis = d3.axisRight(legendScale)
           .ticks(5)
-          .tickFormat(d => d.toFixed(2))
+          .tickFormat(d => (d as number).toFixed(2))
 
         legendSvg.append("g")
           .call(legendAxis)
@@ -302,10 +304,15 @@ export default function InteractiveGlobe({ onCountrySelect, selectedCountry }: I
           .attr("y2", "0%")
 
         linearGradient.selectAll("stop")
-          .data(colorScale.ticks().map((t, i, n) => ({ offset: `${100*i/n.length}%`, color: colorScale(t) })))
+          .data(
+              d3.range(colorScale.domain()[0], colorScale.domain()[1], (colorScale.domain()[1] - colorScale.domain()[0]) / 10).map((t: number) => ({
+                offset: `${((t - colorScale.domain()[0]) / (colorScale.domain()[1] - colorScale.domain()[0])) * 100}%`,
+                color: colorScale(t),
+              }))
+            )
           .enter().append("stop")
-          .attr("offset", d => d.offset)
-          .attr("stop-color", d => d.color)
+          .attr("offset", (d: { offset: string, color: string }) => d.offset)
+          .attr("stop-color", (d: { color: string }) => d.color)
 
         legendSvg.append("rect")
           .attr("width", legendWidth)

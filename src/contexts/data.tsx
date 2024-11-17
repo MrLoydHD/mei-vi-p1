@@ -42,23 +42,23 @@ export const DataProvider = ({ children }: DataProviderProps) => {
             try {
                 console.log("Fetching Data");
                 const [timeSeriesResponse, lastYearResponse] = await Promise.all([
-                    d3.csv<HappinessData>('/data_over_the_years.csv'),
-                    d3.csv<LastYearData>('/data_last_year.csv')
+                    d3.csv('/data_over_the_years.csv'),
+                    d3.csv('/data_last_year.csv')
                 ]);
 
                 const parsedTimeSeriesData = timeSeriesResponse.map((d, index) => {
                     const parsed = {
                         'Country name': d['Country name'],
-                        year: safeParseFloat(d.year),
-                        'Life Ladder': safeParseFloat(d['Life Ladder']),
-                        'Log GDP per capita': safeParseFloat(d['Log GDP per capita']),
-                        'Social support': safeParseFloat(d['Social support']),
-                        'Healthy life expectancy at birth': safeParseFloat(d['Healthy life expectancy at birth']),
-                        'Freedom to make life choices': safeParseFloat(d['Freedom to make life choices']),
-                        Generosity: safeParseFloat(d.Generosity),
-                        'Perceptions of corruption': safeParseFloat(d['Perceptions of corruption']),
-                        'Positive affect': safeParseFloat(d['Positive affect']),
-                        'Negative affect': safeParseFloat(d['Negative affect'])
+                        year: safeParseFloat(d.year) ?? 0,
+                        'Life Ladder': safeParseFloat(d['Life Ladder']) ?? 0,
+                        'Log GDP per capita': safeParseFloat(d['Log GDP per capita']) ?? 0,
+                        'Social support': safeParseFloat(d['Social support']) ?? 0,
+                        'Healthy life expectancy at birth': safeParseFloat(d['Healthy life expectancy at birth']) ?? 0,
+                        'Freedom to make life choices': safeParseFloat(d['Freedom to make life choices']) ?? 0,
+                        Generosity: safeParseFloat(d.Generosity) ?? 0,
+                        'Perceptions of corruption': safeParseFloat(d['Perceptions of corruption']) ?? 0,
+                        'Positive affect': safeParseFloat(d['Positive affect']) ?? 0,
+                        'Negative affect': safeParseFloat(d['Negative affect']) ?? 0
                     };
 
                     Object.entries(parsed).forEach(([key, value]) => {
@@ -73,16 +73,16 @@ export const DataProvider = ({ children }: DataProviderProps) => {
                 const parsedLastYearData = lastYearResponse.map((d, index) => {
                     const parsed = {
                         'Country name': d['Country name'],
-                        'Ladder score': safeParseFloat(d['Ladder score']),
-                        upperwhisker: safeParseFloat(d.upperwhisker),
-                        lowerwhisker: safeParseFloat(d.lowerwhisker),
-                        'Explained by: Log GDP per capita': safeParseFloat(d['Explained by: Log GDP per capita']),
-                        'Explained by: Social support': safeParseFloat(d['Explained by: Social support']),
-                        'Explained by: Healthy life expectancy': safeParseFloat(d['Explained by: Healthy life expectancy']),
-                        'Explained by: Freedom to make life choices': safeParseFloat(d['Explained by: Freedom to make life choices']),
-                        'Explained by: Generosity': safeParseFloat(d['Explained by: Generosity']),
-                        'Explained by: Perceptions of corruption': safeParseFloat(d['Explained by: Perceptions of corruption']),
-                        'Dystopia + residual': safeParseFloat(d['Dystopia + residual'])
+                        'Ladder score': safeParseFloat(d['Ladder score']) ?? 0,
+                        upperwhisker: safeParseFloat(d.upperwhisker) ?? 0,
+                        lowerwhisker: safeParseFloat(d.lowerwhisker) ?? 0,
+                        'Explained by: Log GDP per capita': safeParseFloat(d['Explained by: Log GDP per capita']) ?? 0,
+                        'Explained by: Social support': safeParseFloat(d['Explained by: Social support']) ?? 0,
+                        'Explained by: Healthy life expectancy': safeParseFloat(d['Explained by: Healthy life expectancy']) ?? 0,
+                        'Explained by: Freedom to make life choices': safeParseFloat(d['Explained by: Freedom to make life choices']) ?? 0,
+                        'Explained by: Generosity': safeParseFloat(d['Explained by: Generosity']) ?? 0,
+                        'Explained by: Perceptions of corruption': safeParseFloat(d['Explained by: Perceptions of corruption']) ?? 0,
+                        'Dystopia + residual': safeParseFloat(d['Dystopia + residual']) ?? 0
                     };
 
                     Object.entries(parsed).forEach(([key, value]) => {

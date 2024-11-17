@@ -51,8 +51,8 @@ export default function CountriesComparasionCard({ handleCountryChange, selected
       const data2 = timeSeriesData.find(d => d['Country name'] === country2 && d.year === year2)
       
       if (data1 && data2) {
-        setScore1(parseFloat(data1['Life Ladder'] as string))
-        setScore2(parseFloat(data2['Life Ladder'] as string))
+        setScore1(parseFloat(data1['Life Ladder'] as unknown as string))
+        setScore2(parseFloat(data2['Life Ladder'] as unknown as string))
       }
     }, [country1, country2, year1, year2, timeSeriesData])
 

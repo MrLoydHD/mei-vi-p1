@@ -49,7 +49,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ country1, country2 }) => {
     const years = Array.from(new Set(filteredData.map(d => d.year))).sort()
 
     const x = d3.scalePoint()
-      .domain(years)
+      .domain(years as unknown as string[])
       .range([0, width])
 
     const y = d3.scaleLinear()
@@ -57,7 +57,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ country1, country2 }) => {
       .range([height, 0])
 
     const line = d3.line<HappinessData>()
-      .x(d => x(d.year)!)
+      .x(d => x(d.year as unknown as string)!)
       .y(d => y(d[selectedMetric] as number))
 
     const color = d3.scaleOrdinal()
@@ -68,7 +68,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ country1, country2 }) => {
     years.forEach((year, index) => {
       // Add vertical bar
       g.append("rect")
-        .attr("x", x(year)! - 1)
+        .attr("x", x(year as unknown as string)! - 1)
         .attr("y", height)
         .attr("width", 3)
         .attr("height", 0)
@@ -82,12 +82,12 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ country1, country2 }) => {
         .attr("height", height)
         .on("end", function() {
           d3.select(this)
-            .on("mouseover", function(event, d) {
+            .on("mouseover", function() {
               d3.select(this).attr("opacity", 0.6);  // Darker on hover
               const yearData = filteredData.filter(d => d.year === year);
               const tooltip = g.append("g")
                   .attr("class", "tooltip")
-                  .attr("transform", `translate(${x(year)!}, ${height - 10})`)
+                  .attr("transform", `translate(${x(year as unknown as string)!}, ${height - 10})`)
 
               tooltip.append("rect")
                 .attr("x", -60)
@@ -110,7 +110,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ country1, country2 }) => {
                   .attr("text-anchor", "middle")
                   .attr("font-size", "12px")
                   .attr("dy", `${-1 + i}em`)
-                  .attr("fill", color(d['Country name']))
+                  .attr("fill", color(d['Country name']) as string)
                   .text(`${d['Country name']}: ${(d[selectedMetric] as number).toFixed(2)}`)
               })
             })
@@ -123,7 +123,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ country1, country2 }) => {
       // Add y-axis for each year with animation
       const yAxis = g.append("g")
         .attr("class", "y-axis")
-        .attr("transform", `translate(${x(year)},0)`)
+        .attr("transform", `translate(${x(year as unknown as string)},0)`)
         .style("opacity", 0)
       
       yAxis.call(d3.axisLeft(y).ticks(5))
@@ -138,7 +138,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ country1, country2 }) => {
       
       // Add year label with animation
       g.append("text")
-        .attr("x", x(year)!)
+        .attr("x", x(year as unknown as string)!)
         .attr("y", height + 20)
         .attr("text-anchor", "middle")
         .text(year)
@@ -177,7 +177,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ country1, country2 }) => {
         .data(countryData)
         .enter().append("circle")
         .attr("class", `point-${country.replace(/[^a-zA-Z0-9]/g, '_')}`)
-        .attr("cx", d => x(d.year)!)
+        .attr("cx", d => x(d.year as unknown as string)!)
         .attr("cy", d => y(d[selectedMetric] as number))
         .attr("r", 0)
         .attr("fill", color(country) as string)
@@ -193,7 +193,7 @@ const SlopeChart: React.FC<SlopeChartProps> = ({ country1, country2 }) => {
             .on("mouseover", function(event, d: HappinessData) {
               const tooltip = g.append("g")
                 .attr("class", "tooltip")
-                .attr("transform", `translate(${x(d.year)!}, ${y(d[selectedMetric] as number) - 10})`)
+                .attr("transform", `translate(${x(d.year as unknown as string)!}, ${y(d[selectedMetric] as number) - 10})`)
 
               tooltip.append("rect")
                 .attr("x", -100)

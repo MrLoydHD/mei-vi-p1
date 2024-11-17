@@ -1,8 +1,8 @@
-import { lazy, Suspense, ReactNode, useEffect, useState } from 'react';
+import { Suspense} from 'react';
 import { CleanLayout } from './layouts/CleanLayout';
+import HomePage from './pages/HomePage';
+import InfoPage from './pages/InfoPage';
 
-const HomePage = lazy(() => import('./pages/HomePage'));
-const InfoPage = lazy(() => import('./pages/InfoPage'));
 
 export const routes = [
     {

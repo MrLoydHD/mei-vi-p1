@@ -3,9 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { useData } from '@/contexts/data'
-import { HappinessData } from '@/lib/types'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 interface ComparativeBarChartProps {
   country1: string
@@ -49,7 +47,7 @@ const ComparativeBarChart: React.FC<ComparativeBarChartProps> = ({ country1, cou
     const years = Array.from(new Set(filteredData.map(d => d.year))).sort()
 
     const x0 = d3.scaleBand()
-      .domain(years)
+      .domain(years as unknown as string[])
       .range([0, width])
       .padding(0.1)
 
@@ -70,10 +68,7 @@ const ComparativeBarChart: React.FC<ComparativeBarChartProps> = ({ country1, cou
     g.append("g")
       .attr("class", "grid")
       .attr("transform", `translate(0,${height})`)
-      .call(d3.axisBottom(x0)
-        .tickSize(-height)
-        .tickFormat("")
-      )
+
       .call(g => g.select(".domain").remove())
       .style("opacity", 0)
       .transition()
@@ -82,10 +77,6 @@ const ComparativeBarChart: React.FC<ComparativeBarChartProps> = ({ country1, cou
 
     g.append("g")
       .attr("class", "grid")
-      .call(d3.axisLeft(y)
-        .tickSize(-width)
-        .tickFormat("")
-      )
       .call(g => g.select(".domain").remove())
       .style("opacity", 0)
       .transition()
@@ -106,7 +97,7 @@ const ComparativeBarChart: React.FC<ComparativeBarChartProps> = ({ country1, cou
         .data(yearData)
         .enter().append("rect")
           .attr("class", `bars-${year}`)
-          .attr("x", d => x0(year)! + x1(d['Country name'])!)
+          .attr("x", d => x0(year as unknown as string)! + x1(d['Country name'])!)
           .attr("y", height)
           .attr("width", x1.bandwidth())
           .attr("fill", d => color(d['Country name']) as string)
@@ -114,7 +105,7 @@ const ComparativeBarChart: React.FC<ComparativeBarChartProps> = ({ country1, cou
           .on("mouseover", function(event, d) {
             const tooltip = g.append("g")
               .attr("class", "tooltip")
-              .attr("transform", `translate(${x0(year)! + x1(d['Country name'])! + x1.bandwidth() / 2}, ${y(d[selectedMetric] as number) - 10})`)
+              .attr("transform", `translate(${x0(year as unknown as string)! + x1(d['Country name'])! + x1.bandwidth() / 2}, ${y(d[selectedMetric] as number) - 10})`)
 
             tooltip.append("rect")
               .attr("x", -60)
@@ -133,13 +124,13 @@ const ComparativeBarChart: React.FC<ComparativeBarChartProps> = ({ country1, cou
               .text(`${d['Country name']}: ${(d[selectedMetric] as number).toFixed(2)}`)
 
             g.selectAll("rect")
-              .attr("opacity", function(dd: any) {
+              .attr("opacity", function(dd: d3.DSVRowArray<string>) {
                 return dd['Country name'] === d['Country name'] ? 1 : 0.3;
               })
-              .attr("stroke", function(dd: any) {
+              .attr("stroke", function(dd: d3.DSVRowArray<string>) {
                 return dd['Country name'] === d['Country name'] ? d3.rgb(color(dd['Country name']) as string).darker(0.5).toString() : "none";
               })
-              .attr("stroke-width", function(dd: any) {
+              .attr("stroke-width", function(dd: d3.DSVRowArray<string>) {
                 return dd['Country name'] === d['Country name'] ? 2 : 0;
               });
           })
