@@ -3,7 +3,6 @@ import { CleanLayout } from './layouts/CleanLayout';
 import HomePage from './pages/HomePage';
 import InfoPage from './pages/InfoPage';
 
-
 export const routes = [
     {
         path: '/',
@@ -12,7 +11,7 @@ export const routes = [
             {
                 path: '/',
                 element: (
-                    <Suspense fallback={<div>Loading...</div>}>
+                    <Suspense fallback={<div>Loading....</div>}>
                         <HomePage />
                     </Suspense>
                 )
