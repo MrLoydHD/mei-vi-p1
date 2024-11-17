@@ -50,8 +50,8 @@ const CountriesComparasionChart: React.FC<CountriesComparasionChartProps> = ({ c
   useEffect(() => {
     if (!svgRef.current || !lastYearData.length || Object.keys(scales).length === 0) return
 
-    const country1Data = lastYearData.find(d => d['Country name'] === country1)
-    const country2Data = lastYearData.find(d => d['Country name'] === country2)
+    const country1Data = lastYearData.find(d => d['Country name'] === country1) as unknown as HappinessData
+    const country2Data = lastYearData.find(d => d['Country name'] === country2) as unknown as HappinessData
     if (!country1Data || !country2Data) return
 
     const margin = { top: 100, right: 100, bottom: 100, left: 100 }
