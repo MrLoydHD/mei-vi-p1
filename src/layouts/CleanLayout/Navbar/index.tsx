@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { HelpCircle } from 'lucide-react';
 
 export default function Navbar() {
-  const logoSrc = "/src/assets/WHR.png";
+  const logoSrc = "/WHR.png";
 
   return (
     <header className="bg-primary text-primary-foreground shadow-md py-2">
