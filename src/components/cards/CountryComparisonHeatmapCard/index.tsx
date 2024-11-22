@@ -23,7 +23,7 @@ export default function CountryComparisonHeatmapCard({ handleCountryChange, sele
     <Card className="border-primary">
       <CardContent className="p-4 md:p-6">
         <div className="flex justify-between w-full">
-          <h2 className="text-xl md:text-2xl font-bold mb-4">Country Comparison Radar</h2>
+          <h2 className="text-xl md:text-2xl font-bold mb-4">Country Comparison 2024</h2>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline">What does this mean?</Button>

@@ -340,7 +340,7 @@ const RadarChart: React.FC<RadarChartProps> = ({ country, comparisonType, compar
   return (
     <div className="flex flex-col items-center">
       <div className="flex justify-between w-full mb-4">
-        <h2 className="text-2xl font-bold">Happiness Factors for {country}</h2>
+        <h2 className="text-2xl font-bold">Happiness Factors for {country} 2024</h2>
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline">What does this mean?</Button>

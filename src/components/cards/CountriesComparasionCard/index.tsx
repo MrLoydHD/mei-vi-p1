@@ -191,7 +191,7 @@ export default function CountriesComparasionCard({ handleCountryChange, selected
               </Button>
             </div>
             
-            <h2 className="text-3xl font-bold">Country Comparison</h2>
+            <h2 className="text-3xl font-bold">Country Comparison (2005-2023)</h2>
             
             <div className="flex items-center gap-4">
               <Button 

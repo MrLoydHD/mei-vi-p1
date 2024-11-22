@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import TreeMapChart from '@/components/d3/TreeMapChart'
 import * as d3 from 'd3'
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 interface TreeMapNode {
   name: string
@@ -88,8 +89,24 @@ const TreeMapCard: React.FC = () => {
 
   return (
     <Card className="w-full h-full border-primary">
-      <CardHeader>
-        <CardTitle>TreeMap Chart: Continent and Country Rankings</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle>Continent and Country Rankings 2024</CardTitle>
+        <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline">What does this mean?</Button>
+            </PopoverTrigger>
+          <PopoverContent className="w-80">
+            <div className="space-y-2">
+              <h3 className="font-medium">About this Chart</h3>
+              <p className="text-sm text-muted-foreground">
+                This treemap visualizes the selected happiness metric across continents and countries. The size of each rectangle represents the value of the metric.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Click on a continent to zoom in and see individual country data. Use the 'Back to Continents' button to return to the continent view.
+              </p>
+            </div>
+          </PopoverContent>
+        </Popover>
       </CardHeader>
       <CardContent>
         <div className="flex justify-between items-center mb-4">

@@ -7,7 +7,7 @@ import BarChartRaceCard from '@/components/cards/BarChartRaceCard'
 import PercentDifferenceCard from '@/components/cards/PercentDifferenceCard'
 import CountriesComparasionCard from '@/components/cards/CountriesComparasionCard'
 import CountryComparisonHeatmapCard from '@/components/cards/CountryComparisonHeatmapCard'
-import { SuggestionForm } from '@/components/cards/SuggestionForms'
+import DataCreditsCard from '@/components/cards/DataCreditsCard'
 import TreeMapCard from '@/components/cards/TreeMapCard'
 import RadarChart from '@/components/d3/RadarChart'
 import TrendChart from '@/components/d3/TrendChart'
@@ -16,6 +16,7 @@ import SlopeChart from '@/components/d3/SlopeChart'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { CreditCard } from 'lucide-react'
 
 
 const comparisonOptions = [
@@ -71,7 +72,7 @@ export default function HomePage() {
               <Card className="border-primary">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex justify-between items-center mb-2 md:mb-4">
-                    <h2 className="text-xl md:text-2xl font-bold">Trends Over the Years</h2>
+                    <h2 className="text-xl md:text-2xl font-bold">Trends Over the Years (2005-2023)</h2>
                     <Popover open={isInfoOpen} onOpenChange={setIsInfoOpen}>
                       <PopoverTrigger asChild>
                         <Button variant="outline">What does this mean?</Button>
@@ -160,8 +161,10 @@ export default function HomePage() {
             <div className="lg:col-span-7 border border-primary rounded-lg">
             <Card className="border-none shadow-none">
                 <CardHeader>
-                  <CardTitle>Country Comparison</CardTitle>
-                  <CardDescription>Compare happiness factors between two countries</CardDescription>
+                  <CardTitle>
+                        Metrics Comparasion Over The Years (2005-2023)
+                  </CardTitle>
+                  <CardDescription>Compare differente metrics between two countries</CardDescription>
                   <div className="flex space-x-4 w-full">
                     <Select value={selectedCountries.country1} onValueChange={(country) => handleCountryChange(country, 1)}>
                       <SelectTrigger className="w-1/2">
@@ -212,7 +215,7 @@ export default function HomePage() {
               <TreeMapCard />
             </div>
             <div className='lg:col-span-2'>
-              <SuggestionForm />
+              <DataCreditsCard />
             </div>
           </div>
         </TabsContent>
