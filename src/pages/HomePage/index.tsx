@@ -11,7 +11,7 @@ import DataCreditsCard from '@/components/cards/DataCreditsCard'
 import TreeMapCard from '@/components/cards/TreeMapCard'
 import RadarChart from '@/components/d3/RadarChart'
 import TrendChart from '@/components/d3/TrendChart'
-import StackedBarChart from '@/components/d3/StackedBarChart'
+import ComparativeBarChart from '@/components/d3/StackedBarChart'
 import SlopeChart from '@/components/d3/SlopeChart'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
@@ -195,7 +195,7 @@ export default function HomePage() {
                       <TabsTrigger value="slope">Slope Chart</TabsTrigger>
                     </TabsList>
                     <TabsContent value="bar">
-                      <StackedBarChart country1={selectedCountries.country1} country2={selectedCountries.country2} />
+                      <ComparativeBarChart country1={selectedCountries.country1} country2={selectedCountries.country2} />
                     </TabsContent>
                     <TabsContent value="slope">
                       <SlopeChart country1={selectedCountries.country1} country2={selectedCountries.country2} />

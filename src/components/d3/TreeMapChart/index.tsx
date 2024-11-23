@@ -106,7 +106,7 @@ const TreeMapChart: React.FC<TreeMapChartProps> = ({ data, onNodeClick, metric, 
             .attr("height", 0)
             .attr("fill", d => colorScale(showingContinent ? d.data.name : d.parent!.data.name) as string)
             .attr("opacity", 0.9)
-            .attr("cursor", "pointer")
+            .attr("cursor", (d: d3.HierarchyRectangularNode<TreeMapNode>) => d.children ? "pointer" : "auto")
           ),
         update => update,
         exit => exit.remove()
@@ -120,6 +120,12 @@ const TreeMapChart: React.FC<TreeMapChartProps> = ({ data, onNodeClick, metric, 
         }
       })
       .on("mouseover", (event, d) => {
+        //hover effect apenas nos continent
+        if (showingContinent) {
+          d3.select(event.currentTarget).select("rect")
+            .attr("opacity", 0.7)
+        }
+     
         d3.select("body").select(".tooltip")
           .transition()
           .duration(200)
@@ -128,7 +134,14 @@ const TreeMapChart: React.FC<TreeMapChartProps> = ({ data, onNodeClick, metric, 
           .style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY - 28) + "px");
       })
-      .on("mouseout", hideTooltip);
+      .on("mouseout", (event, d) => {
+        //hover effect
+        if (showingContinent) {
+          d3.select(event.currentTarget).select("rect")
+            .attr("opacity", 0.9)
+        }
+        hideTooltip();
+      })
 
     cell.transition().duration(750)
       .attr("transform", d => `translate(${(d as d3.HierarchyRectangularNode<TreeMapNode>).x0},${(d as d3.HierarchyRectangularNode<TreeMapNode>).y0})`)

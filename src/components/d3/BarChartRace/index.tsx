@@ -4,6 +4,7 @@ import * as d3 from 'd3'
 import { useData } from '@/contexts/data'
 import { Button } from "@/components/ui/button"
 import { PlayCircle, PauseCircle, RotateCcw } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const BarChartRace: React.FC = () => {
   const { timeSeriesData } = useData()
@@ -12,6 +13,13 @@ const BarChartRace: React.FC = () => {
   const [currentYear, setCurrentYear] = useState(2005)
   const [isPlaying, setIsPlaying] = useState(false)
   const [dimensions, setDimensions] = useState({ width: 800, height: 800 })
+
+  const years = useMemo(() => 
+    Array.from(new Set(timeSeriesData.map(d => d.year)))
+      .sort((a, b) => a - b)
+      .filter(year => year >= 2005 && year <= 2023),
+    [timeSeriesData]
+  )
 
   const colorScale = useMemo(() => {
     const uniqueCountries = Array.from(new Set(timeSeriesData.map(d => d['Country name'])))
@@ -324,6 +332,11 @@ const BarChartRace: React.FC = () => {
     setCurrentYear(2005)
   }
 
+  const handleYearChange = (year: string) => {
+    setCurrentYear(parseInt(year))
+    setIsPlaying(false)
+  }
+
   return (
     <div ref={containerRef} className="w-full h-[700px] flex flex-col items-center">
       <div className="w-full max-w-[800px]">
@@ -334,6 +347,16 @@ const BarChartRace: React.FC = () => {
           <Button onClick={handleReset} variant="outline" size="icon">
             <RotateCcw className="h-4 w-4" />
           </Button>
+          <Select value={currentYear.toString()} onValueChange={handleYearChange}>
+            <SelectTrigger className="w-[100px]">
+              <SelectValue placeholder="Year" />
+            </SelectTrigger>
+            <SelectContent>
+              {years.map(year => (
+                <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="w-full h-[800px]">
           <svg ref={svgRef} width={dimensions.width} height={dimensions.height} className="w-full h-full" />

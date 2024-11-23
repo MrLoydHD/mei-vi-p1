@@ -93,6 +93,37 @@ const ComparativeBarChart: React.FC<ComparativeBarChartProps> = ({ country1, cou
     years.forEach(year => {
       const yearData = filteredData.filter(d => d.year === year)
 
+      //se o pais nao tiver dados para o ano
+      if (yearData.length === 1) {
+        yearData.push({
+          'Country name': yearData[0]['Country name'] === country1 ? country2 : country1,
+          year: year,
+          'Life Ladder': 0,
+          'Log GDP per capita': 0,
+          'Social support': 0,
+          'Healthy life expectancy at birth': 0,
+          'Freedom to make life choices': 0,
+          'Perceptions of corruption': 0
+        })
+      }
+      
+
+    // Render bars or "No data" messages
+    yearData.forEach(d => {
+      if (d[selectedMetric] === 0) {
+        // Add "No data" text if the metric value is 0
+        g.append("text")
+          .attr("x", x0(year as unknown as string)! + x1(d['Country name'])! + 150)
+          .attr("y", height) // Slightly above the x-axis
+          .attr("text-anchor", "middle")
+          //90 degree rotation
+          .attr("transform", `rotate(-90, ${x0(year as unknown as string)! + x1(d['Country name'])! + x1.bandwidth() / 2}, ${height - 5})`)
+          .attr("font-size", "12px")
+          .attr("fill", "gray")
+          .text(`No data for ${d['Country name']} in ${year}`)
+      }
+    })
+
       g.selectAll(`.bars-${year}`)
         .data(yearData)
         .enter().append("rect")
