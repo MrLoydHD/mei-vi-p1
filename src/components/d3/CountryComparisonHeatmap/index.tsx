@@ -54,7 +54,7 @@ const CountriesComparasionChart: React.FC<CountriesComparasionChartProps> = ({ c
     const country2Data = lastYearData.find(d => d['Country name'] === country2) as unknown as HappinessData
     if (!country1Data || !country2Data) return
 
-    const margin = { top: 100, right: 100, bottom: 100, left: 100 }
+    const margin = { top: 100, right: 130, bottom: 100, left: 130 }
     const width = 700 - margin.left - margin.right
     const height = 700 - margin.top - margin.bottom
     const radius = Math.min(width, height) / 2
@@ -130,7 +130,7 @@ const CountriesComparasionChart: React.FC<CountriesComparasionChartProps> = ({ c
         .attr("x2", lineCoords.x)
         .attr("y2", lineCoords.y)
 
-      const labelRadius = radius * 1.2
+      const labelRadius = radius * 1.35
       const labelX = labelRadius * Math.cos(angle)
       const labelY = labelRadius * Math.sin(angle)
 
@@ -156,22 +156,22 @@ const CountriesComparasionChart: React.FC<CountriesComparasionChartProps> = ({ c
     })
 
     // Draw data for both countries
-    const drawCountryData = (data: HappinessData, color: string, delay: number) => {
+    const drawCountryData = (data: HappinessData, color: string, delay: number, offsetMultiplier: number) => {
       const coordinates = features.map((feature, i) => {
-        const angle = (i * Math.PI / 3) - Math.PI / 2
-        const value = parseValue(data[feature as keyof typeof data])
-        const scaledValue = scales[feature](value)
-        return angleToCoordinate(angle, scaledValue)
-      })
-
-      const line = d3.lineRadial<{x: number, y: number}>()
+        const angle = (i * Math.PI / 3) - Math.PI / 2;
+        const value = parseValue(data[feature as keyof typeof data]);
+        const scaledValue = scales[feature](value);
+        return angleToCoordinate(angle, scaledValue);
+      });
+    
+      const line = d3.lineRadial<{ x: number; y: number }>()
         .angle((_, i) => i * Math.PI / 3)
         .radius(d => Math.sqrt(d.x * d.x + d.y * d.y))
-        .curve(d3.curveLinearClosed)
-
+        .curve(d3.curveLinearClosed);
+    
       g.append("path")
         .datum(coordinates)
-        .attr("d", line([{x: 0, y: 0}]))
+        .attr("d", line([{ x: 0, y: 0 }]))
         .attr("stroke", color)
         .attr("fill", color)
         .attr("fill-opacity", 0.3)
@@ -179,17 +179,17 @@ const CountriesComparasionChart: React.FC<CountriesComparasionChartProps> = ({ c
         .transition()
         .delay(delay)
         .duration(500)
-        .attrTween("d", function() {
-          const interpolator = d3.interpolate([{x: 0, y: 0}], coordinates)
-          return function(t) {
-            return line(interpolator(t))
-          }
-        })
-
+        .attrTween("d", function () {
+          const interpolator = d3.interpolate([{ x: 0, y: 0 }], coordinates);
+          return function (t) {
+            return line(interpolator(t));
+          };
+        });
+    
       coordinates.forEach((coord, index) => {
-        const feature = features[index]
-        const value = parseValue(data[feature as keyof typeof data])
-        
+        const feature = features[index];
+        const value = parseValue(data[feature as keyof typeof data]);
+    
         g.append("circle")
           .attr("cx", 0)
           .attr("cy", 0)
@@ -199,20 +199,20 @@ const CountriesComparasionChart: React.FC<CountriesComparasionChartProps> = ({ c
           .delay(delay + 500 + index * 50)
           .duration(250)
           .attr("cx", coord.x)
-          .attr("cy", coord.y)
-
-        const labelRadius = radius * 1.1
-        const angle = (index * Math.PI / 3) - Math.PI / 2
-        const labelX = labelRadius * Math.cos(angle)
-        const labelY = labelRadius * Math.sin(angle)
-
-        const labelYOffset = feature === "Explained by: Log GDP per capita" || 
-                             feature === "Explained by: Social support" || 
-                             feature === "Explained by: Perceptions of corruption" ? -5 : 10
-
+          .attr("cy", coord.y);
+    
+        // Adjust label positioning
+        const labelRadius = radius * 1.1;
+        const angle = (index * Math.PI / 3) - Math.PI / 2;
+        const labelX = labelRadius * Math.cos(angle);
+        const labelY = labelRadius * Math.sin(angle);
+    
+        const offsetX = 10 * offsetMultiplier * Math.cos(angle); // Adjust offset based on angle
+        let offsetY = 10 * offsetMultiplier * Math.sin(angle); // Adjust offset based on angle
+        
         g.append("text")
-          .attr("x", labelX)
-          .attr("y", labelY + labelYOffset)
+          .attr("x", labelX + offsetX)
+          .attr("y", labelY + offsetY)
           .attr("text-anchor", "middle")
           .attr("dominant-baseline", "middle")
           .attr("font-size", "14px")
@@ -222,12 +222,13 @@ const CountriesComparasionChart: React.FC<CountriesComparasionChartProps> = ({ c
           .transition()
           .delay(delay + 750 + index * 50)
           .duration(250)
-          .attr("opacity", 1)
-      })
-    }
-
-    drawCountryData(country1Data, blueColor, 1000)
-    drawCountryData(country2Data, purpleColor, 2000)
+          .attr("opacity", 1);
+      });
+    };
+    
+    drawCountryData(country1Data, blueColor, 1000, 1); // Offset multiplier for country1
+    drawCountryData(country2Data, purpleColor, 2000, 3); // Offset multiplier for country2
+    
 
     function angleToCoordinate(angle: number, value: number): { x: number; y: number } {
       const x = Math.cos(angle) * radialScale(value)
