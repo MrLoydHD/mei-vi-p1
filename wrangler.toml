@@ -4,3 +4,4 @@ type = "typescript"
 [build]
 command = "yarn build"
 directory = "dist"
+
