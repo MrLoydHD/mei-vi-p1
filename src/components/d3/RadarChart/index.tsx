@@ -266,7 +266,7 @@ const RadarChart: React.FC<RadarChartProps> = ({ country, comparisonType, compar
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "middle")
         .attr("font-size", "14px")
-        .attr("fill", "#333")
+        .attr("fill", "hsl(var(--primary))")
         .text(value.toFixed(3))
         .attr("opacity", 0)
         .transition()

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useData } from '@/contexts/data'
@@ -30,7 +30,12 @@ const comparisonOptions = [
 ]
 
 export default function HomePage() {
-  const [, setActiveTab] = useState("tab1")
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('activeTab') || "tab1"
+    }
+    return "tab1"
+  })  
   const { lastYearData, isLoading, timeSeriesData } = useData()
   const [selectedCountry, setSelectedCountry] = useState("Finland")
   const [comparisonType, setComparisonType] = useState("global")
@@ -39,6 +44,10 @@ export default function HomePage() {
     country1: "Finland",
     country2: "Denmark"
   });
+
+  useEffect(() => {
+    localStorage.setItem('activeTab', activeTab)
+  }, [activeTab])
 
   const countries = Array.from(new Set(timeSeriesData.map(d => d['Country name']))).sort()
 
@@ -59,7 +68,7 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto p-4 min-h-[calc(100vh-4rem)]">
-      <Tabs defaultValue="tab1" className="w-full h-full" onValueChange={setActiveTab}>
+      <Tabs defaultValue={activeTab} className="w-full h-full" onValueChange={setActiveTab}>
         <TabsList className="grid bg-primary bg-opacity-30 shadow-lg grid-cols-2 md:grid-cols-3 mb-4">
           <TabsTrigger value="tab1">Around the World</TabsTrigger>
           <TabsTrigger value="tab2">Country VS Country</TabsTrigger>

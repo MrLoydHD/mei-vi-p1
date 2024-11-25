@@ -244,7 +244,6 @@ const TrendChart: React.FC<TrendChartProps> = ({ selectedCountry, onCountryChang
       .attr("y2", 20 * (additionalCountries.length + 1))
       .attr("stroke", "gray")
       .attr("stroke-width", 2)
-      .attr("stroke-dasharray", "5,5")
 
     legend.append("text")
       .attr("x", -35)

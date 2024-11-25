@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useData } from '@/contexts/data'
 import { HappinessData } from '@/lib/types'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -20,7 +20,7 @@ const TreeMapCard: React.FC = () => {
   const { timeSeriesData } = useData()
   const [selectedMetric, setSelectedMetric] = useState('Life Ladder')
   const [currentView, setCurrentView] = useState<TreeMapNode | null>(null)
-  const [showingContinent, setShowingContinent] = useState(true)
+  const [viewStack, setViewStack] = useState<string[]>(["global"])
 
   const metrics = [
     'Life Ladder',
@@ -41,7 +41,7 @@ const TreeMapCard: React.FC = () => {
     Oceania: ["Australia", "New Zealand"]
   }
 
-  const prepareData = (data: HappinessData[]): TreeMapNode => {
+  const prepareData = useCallback((data: HappinessData[], metric: string): TreeMapNode => {
     const latestYear = Math.max(...data.map(d => d.year))
     const latestData = data.filter(d => d.year === latestYear)
 
@@ -50,7 +50,7 @@ const TreeMapCard: React.FC = () => {
       value: 0,
       children: Object.entries(continents).map(([continent, countries]) => {
         const continentData = latestData.filter(d => countries.includes(d['Country name']))
-        const countryValues = continentData.map(d => d[selectedMetric] as number)
+        const countryValues = continentData.map(d => d[metric] as number)
         const continentAvg = countryValues.reduce((a, b) => a + b, 0) / countryValues.length || 0
 
         return {
@@ -58,7 +58,7 @@ const TreeMapCard: React.FC = () => {
           value: continentAvg,
           children: continentData.map(d => ({
             name: d['Country name'],
-            value: d[selectedMetric] as number
+            value: d[metric] as number
           }))
         }
       }).filter(continent => continent.children && continent.children.length > 0)
@@ -66,25 +66,33 @@ const TreeMapCard: React.FC = () => {
 
     root.value = d3.mean(root.children!, d => d.value) || 0
     return root
-  }
+  }, [continents])
 
   useEffect(() => {
     if (timeSeriesData.length) {
-      const data = prepareData(timeSeriesData)
-      setCurrentView(data)
-      setShowingContinent(true)
+      const data = prepareData(timeSeriesData, selectedMetric)
+      if (viewStack[viewStack.length - 1] === "global") {
+        setCurrentView(data)
+      } else {
+        const continentName = viewStack[viewStack.length - 1]
+        const continentData = data.children!.find(c => c.name === continentName)
+        if (continentData) {
+          setCurrentView(continentData)
+        }
+      }
     }
-  }, [timeSeriesData, selectedMetric])
+  }, [timeSeriesData, selectedMetric, viewStack])
 
   const handleNodeClick = (node: TreeMapNode) => {
-    setCurrentView(node)
-    setShowingContinent(false)
+    if (viewStack[viewStack.length - 1] === "global") {
+      setViewStack([...viewStack, node.name])
+    }
   }
 
   const handleBackClick = () => {
-    const data = prepareData(timeSeriesData)
-    setCurrentView(data)
-    setShowingContinent(true)
+    if (viewStack.length > 1) {
+      setViewStack(viewStack.slice(0, -1))
+    }
   }
 
   return (
@@ -92,9 +100,9 @@ const TreeMapCard: React.FC = () => {
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle>Continent and Country Rankings 2024</CardTitle>
         <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline">What does this mean?</Button>
-            </PopoverTrigger>
+          <PopoverTrigger asChild>
+            <Button variant="outline">What does this mean?</Button>
+          </PopoverTrigger>
           <PopoverContent className="w-80">
             <div className="space-y-2">
               <h3 className="font-medium">About this Chart</h3>
@@ -102,7 +110,7 @@ const TreeMapCard: React.FC = () => {
                 This treemap visualizes the selected happiness metric across continents and countries. The size of each rectangle represents the value of the metric.
               </p>
               <p className="text-sm text-muted-foreground">
-                Click on a continent to zoom in and see individual country data. Use the 'Back to Continents' button to return to the continent view.
+                Click on a continent to zoom in and see individual country data. Use the 'Back' button to return to the previous view.
               </p>
             </div>
           </PopoverContent>
@@ -120,7 +128,7 @@ const TreeMapCard: React.FC = () => {
               ))}
             </SelectContent>
           </Select>
-          {!showingContinent && (
+          {viewStack.length > 1 && (
             <Button onClick={handleBackClick}>
               Back to Continents
             </Button>
@@ -131,7 +139,7 @@ const TreeMapCard: React.FC = () => {
             data={currentView}
             onNodeClick={handleNodeClick}
             metric={selectedMetric}
-            showingContinent={showingContinent}
+            showingContinent={viewStack[viewStack.length - 1] === "global"}
           />
         )}
       </CardContent>

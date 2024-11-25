@@ -7,7 +7,6 @@ import { useData } from '@/contexts/data'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import DivergingBarChart from '@/components/d3/CountriesComparasionChart'
-import { motion, AnimatePresence } from 'framer-motion'
 import * as d3 from 'd3'
 
 interface CountriesComparasionCardProps {
@@ -22,8 +21,6 @@ export default function CountriesComparasionCard({ handleCountryChange, selected
     const [year2, setYear2] = useState<number>(2023)
     const [availableYears1, setAvailableYears1] = useState<number[]>([])
     const [availableYears2, setAvailableYears2] = useState<number[]>([])
-    const [direction1, setDirection1] = useState<number>(0)
-    const [direction2, setDirection2] = useState<number>(0)
     const [score1, setScore1] = useState<number>(0)
     const [score2, setScore2] = useState<number>(0)
     const svgRef = useRef<SVGSVGElement>(null)
@@ -36,14 +33,14 @@ export default function CountriesComparasionCard({ handleCountryChange, selected
         .map(d => d.year)
         .sort((a, b) => b - a)
       setAvailableYears1(years1)
-      setYear1(years1[0] || 2023)
+      setYear1(prev => years1.includes(prev) ? prev : years1[0] || 2023)
   
       const years2 = timeSeriesData
         .filter(d => d['Country name'] === country2)
         .map(d => d.year)
         .sort((a, b) => b - a)
       setAvailableYears2(years2)
-      setYear2(years2[0] || 2023)
+      setYear2(prev => years2.includes(prev) ? prev : years2[0] || 2023)
     }, [country1, country2, timeSeriesData])
 
     useEffect(() => {
@@ -136,12 +133,10 @@ export default function CountriesComparasionCard({ handleCountryChange, selected
 
     }, [score1, score2])
   
-    const handleYearChange = (year: number, index: number, dir: number) => {
+    const handleYearChange = (year: number, index: number) => {
       if (index === 0) {
-        setDirection1(dir)
         setYear1(year)
       } else {
-        setDirection2(dir)
         setYear2(year)
       }
     }
@@ -153,84 +148,80 @@ export default function CountriesComparasionCard({ handleCountryChange, selected
             <div className="flex items-center gap-4">
               <Button 
                 variant="outline" 
-                size="lg"
+                size="icon"
                 onClick={() => {
                   const currentIndex = availableYears1.indexOf(year1)
                   if (currentIndex < availableYears1.length - 1) {
-                    handleYearChange(availableYears1[currentIndex + 1], 0, -1)
+                    handleYearChange(availableYears1[currentIndex + 1], 0)
                   }
                 }}
                 disabled={year1 === availableYears1[availableYears1.length - 1]}
               >
-                <ChevronLeft className="h-6 w-6" />
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-              <AnimatePresence mode="popLayout">
-                <motion.div
-                  key={year1}
-                  initial={{ x: direction1 * 50, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: direction1 * -50, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-2xl font-bold"
-                >
-                  {year1}
-                </motion.div>
-              </AnimatePresence>
+              <Select value={year1.toString()} onValueChange={(value) => handleYearChange(parseInt(value), 0)}>
+                <SelectTrigger className="w-[100px] text-lg">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableYears1.map(year => (
+                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button 
                 variant="outline" 
-                size="lg"
+                size="icon"
                 onClick={() => {
                   const currentIndex = availableYears1.indexOf(year1)
                   if (currentIndex > 0) {
-                    handleYearChange(availableYears1[currentIndex - 1], 0, 1)
+                    handleYearChange(availableYears1[currentIndex - 1], 0)
                   }
                 }}
                 disabled={year1 === availableYears1[0]}
               >
-                <ChevronRight className="h-6 w-6" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
             
-            <h2 className="text-3xl font-bold">Country Comparison (2005-2023)</h2>
+            <h2 className="text-3xl font-bold">Country Comparison</h2>
             
             <div className="flex items-center gap-4">
               <Button 
                 variant="outline" 
-                size="lg"
+                size="icon"
                 onClick={() => {
                   const currentIndex = availableYears2.indexOf(year2)
                   if (currentIndex < availableYears2.length - 1) {
-                    handleYearChange(availableYears2[currentIndex + 1], 1, -1)
+                    handleYearChange(availableYears2[currentIndex + 1], 1)
                   }
                 }}
                 disabled={year2 === availableYears2[availableYears2.length - 1]}
               >
-                <ChevronLeft className="h-6 w-6" />
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-              <AnimatePresence mode="popLayout">
-                <motion.div
-                  key={year2}
-                  initial={{ x: direction2 * 50, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: direction2 * -50, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-2xl font-bold"
-                >
-                  {year2}
-                </motion.div>
-              </AnimatePresence>
+              <Select value={year2.toString()} onValueChange={(value) => handleYearChange(parseInt(value), 1)}>
+                <SelectTrigger className="w-[100px] text-lg">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableYears2.map(year => (
+                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button 
                 variant="outline" 
-                size="lg"
+                size="icon"
                 onClick={() => {
                   const currentIndex = availableYears2.indexOf(year2)
                   if (currentIndex > 0) {
-                    handleYearChange(availableYears2[currentIndex - 1], 1, 1)
+                    handleYearChange(availableYears2[currentIndex - 1], 1)
                   }
                 }}
                 disabled={year2 === availableYears2[0]}
               >
-                <ChevronRight className="h-6 w-6" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
